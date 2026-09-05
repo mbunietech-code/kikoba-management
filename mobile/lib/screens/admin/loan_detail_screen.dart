@@ -21,7 +21,6 @@ class LoanDetailScreen extends StatelessWidget {
     }
     final schedule = mock.schedules.where((r) => r.loanId == id).toList();
     final repayments = mock.repayments.where((r) => r.loanId == id).toList();
-    final guarantors = mock.guarantors.where((g) => g.loanId == id).toList();
     final step = _workflow.indexOf(loan.status);
     final canDecide = ['submitted', 'under_review'].contains(loan.status);
 
