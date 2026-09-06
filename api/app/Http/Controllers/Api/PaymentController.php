@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\Payment;
+use App\Services\ReversalService;
 use App\Support\Audit;
 use Illuminate\Http\Request;
 
 class PaymentController extends ApiController
 {
+    public function __construct(private readonly ReversalService $reversals) {}
+
     public function index(Request $request)
     {
         $q = Payment::where('organization_id', $this->orgId($request))
@@ -41,5 +44,12 @@ class PaymentController extends ApiController
         Audit::log($request, 'VERIFY_PAYMENT', 'Payment', $p->id, ['status' => 'pending'], ['status' => 'successful']);
 
         return $this->item($p->fresh());
+    }
+
+    public function reverse(Request $request, string $id)
+    {
+        $p = Payment::where('organization_id', $this->orgId($request))->findOrFail($id);
+
+        return $this->item($this->reversals->reversePayment($request, $p, $request->input('reason')));
     }
 }

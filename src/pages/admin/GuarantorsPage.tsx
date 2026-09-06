@@ -3,52 +3,54 @@ import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { ShieldCheck } from 'lucide-react'
 import {
-  Button, Card, DataTable, PageHeader, Progress, SkeletonTable, StatCard, StatusBadge, useToast,
+  Avatar, Button, Card, DataTable, PageHeader, Progress, StatCard, StatusBadge, useToast, EmptyState,
 } from '@/components/ui'
 import type { Column } from '@/components/ui'
-import { ListToolbar } from '@/components/ListToolbar'
-import { MemberCell } from '@/components/MemberCell'
-import { useMockQuery } from '@/lib/useMockQuery'
+import { RowActions } from '@/components/RowActions'
+import { useApiQuery } from '@/lib/useApi'
+import { listGuarantors, releaseGuarantor, verifyGuarantor } from '@/api'
 import { formatMoney } from '@/lib/format'
-import { guarantors, memberById } from '@/mock/data'
-import { sum } from '@/mock/selectors'
-import type { Guarantor } from '@/types'
+
+const CAP = 5_000_000
 
 export default function GuarantorsPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const toast = useToast()
-  const { data, loading } = useMockQuery(() => guarantors, [])
-  const [search, setSearch] = useState('')
-  const [status, setStatus] = useState('all')
+  const [status] = useState('all')
+  const query = useMemo(() => ({ status: status === 'all' ? undefined : status, per_page: 100 }), [status])
+  const { data, loading, error, refetch } = useApiQuery(() => listGuarantors(query), [query])
+  const rows: any[] = data?.data ?? []
 
-  const rows = useMemo(
-    () =>
-      (data ?? []).filter((g) => {
-        if (status !== 'all' && g.status !== status) return false
-        const names = `${memberById(g.borrowerId)?.fullName} ${memberById(g.guarantorId)?.fullName} ${g.loanNumber}`
-        return names.toLowerCase().includes(search.toLowerCase())
-      }),
-    [data, search, status],
-  )
+  async function act(fn: () => Promise<unknown>, msg: string) {
+    try {
+      await fn()
+      toast(msg)
+      refetch()
+    } catch (e: any) {
+      toast(e?.message ?? t('common.error'), 'error')
+    }
+  }
 
-  const CAP = 5_000_000
   const exposureByGuarantor = (gid: string) =>
-    sum(guarantors.filter((g) => g.guarantorId === gid && g.status === 'approved').map((g) => g.guaranteedAmount))
+    rows.filter((g) => g.guarantor?.id === gid && g.status === 'approved').reduce((a, g) => a + g.guaranteedAmount, 0)
 
-  const pending = guarantors.filter((g) => g.status === 'pending').length
-  const totalGuaranteed = sum(guarantors.filter((g) => g.status === 'approved').map((g) => g.guaranteedAmount))
+  const pending = rows.filter((g) => g.status === 'pending').length
+  const totalGuaranteed = rows.filter((g) => g.status === 'approved').reduce((a, g) => a + g.guaranteedAmount, 0)
 
-  const columns: Column<Guarantor>[] = [
+  const m = (member: any) => member ? (
+    <span className="flex items-center gap-2"><Avatar name={member.fullName} color={member.avatarColor} size="xs" /><span className="text-[13px]">{member.fullName}</span></span>
+  ) : '—'
+
+  const columns: Column<any>[] = [
     { key: 'loan', header: t('loans.loanNumber'), render: (g) => <span className="font-medium text-primary-700">{g.loanNumber}</span> },
-    { key: 'borrower', header: t('guarantors.borrower'), render: (g) => <MemberCell memberId={g.borrowerId} /> },
-    { key: 'guarantor', header: t('guarantors.guarantor'), render: (g) => <MemberCell memberId={g.guarantorId} /> },
+    { key: 'borrower', header: t('guarantors.borrower'), render: (g) => m(g.borrower) },
+    { key: 'guarantor', header: t('guarantors.guarantor'), render: (g) => m(g.guarantor) },
     { key: 'amount', header: t('guarantors.guaranteedAmount'), align: 'right', sortValue: (g) => g.guaranteedAmount, render: (g) => formatMoney(g.guaranteedAmount) },
     {
-      key: 'exposure',
-      header: t('guarantors.exposure'),
+      key: 'exposure', header: t('guarantors.exposure'),
       render: (g) => {
-        const exp = exposureByGuarantor(g.guarantorId)
+        const exp = exposureByGuarantor(g.guarantor?.id)
         return (
           <div className="w-32">
             <Progress value={(exp / CAP) * 100} tone={exp > CAP ? 'danger' : 'primary'} showLabel />
@@ -59,13 +61,17 @@ export default function GuarantorsPage() {
     },
     { key: 'status', header: t('common.status'), render: (g) => <StatusBadge status={g.status} label={t(`guarantors.status.${g.status}`)} /> },
     {
-      key: 'action',
-      header: '',
-      align: 'right',
-      render: (g) =>
-        g.status === 'pending' ? (
-          <Button size="sm" onClick={() => toast(t('guarantors.verify') + ' ✓')}>{t('guarantors.verify')}</Button>
-        ) : null,
+      key: 'actions', header: '', align: 'right',
+      render: (g) => (
+        <span className="flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+          {g.status === 'pending' && <Button size="sm" onClick={() => act(() => verifyGuarantor(g.id), t('guarantors.verify') + ' ✓')}>{t('guarantors.verify')}</Button>}
+          <RowActions
+            onDelete={g.status !== 'released' ? () => act(() => releaseGuarantor(g.id), t('guarantors.status.released')) : undefined}
+            deleteLabel={t('guarantors.status.released')}
+            deleteMessage={t('common.confirmDelete')}
+          />
+        </span>
+      ),
     },
   ]
 
@@ -74,30 +80,20 @@ export default function GuarantorsPage() {
       <PageHeader title={t('guarantors.title')} subtitle={t('guarantors.subtitle')} />
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <StatCard index={0} label={t('guarantors.title')} value={guarantors.length} icon={<ShieldCheck className="h-4 w-4" />} />
+        <StatCard index={0} label={t('guarantors.title')} value={rows.length} icon={<ShieldCheck className="h-4 w-4" />} />
         <StatCard index={1} tone="neutral" label={t('guarantors.status.pending')} value={pending} />
         <StatCard index={2} tone="secondary" label={t('guarantors.guaranteedAmount')} value={formatMoney(totalGuaranteed, { compact: true })} />
       </div>
 
-      <div className="mt-4">
-        <ListToolbar
-          search={search}
-          onSearch={setSearch}
-          filters={[
-            {
-              value: status,
-              onChange: setStatus,
-              options: [
-                { value: 'all', label: t('common.all') },
-                ...(['pending', 'approved', 'rejected', 'released'] as const).map((s) => ({ value: s, label: t(`guarantors.status.${s}`) })),
-              ],
-            },
-          ]}
-        />
-        <Card>
-          {loading ? <SkeletonTable /> : <DataTable columns={columns} rows={rows} rowKey={(g) => g.id} onRowClick={(g) => navigate(`/admin/loans/${g.loanId}`)} />}
-        </Card>
-      </div>
+      <Card className="mt-4">
+        {error ? (
+          <EmptyState title={t('common.error')} hint={error.message} action={<Button onClick={refetch}>{t('common.retry')}</Button>} />
+        ) : loading ? (
+          <EmptyState title={t('common.loading')} />
+        ) : (
+          <DataTable columns={columns} rows={rows} rowKey={(g) => g.id} onRowClick={(g) => navigate(`/admin/loans/${g.loanId}`)} />
+        )}
+      </Card>
     </>
   )
 }

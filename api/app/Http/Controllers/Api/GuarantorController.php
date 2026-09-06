@@ -37,6 +37,15 @@ class GuarantorController extends ApiController
         return $this->item($g->fresh());
     }
 
+    public function destroy(Request $request, string $id)
+    {
+        $g = Guarantor::where('organization_id', $this->orgId($request))->findOrFail($id);
+        $g->update(['status' => 'released']);
+        Audit::log($request, 'RELEASE_GUARANTOR', 'Guarantor', $g->id, null, ['status' => 'released']);
+
+        return \App\Support\ApiResponse::message('Guarantor released');
+    }
+
     private function m($member): ?array
     {
         return $member ? ['id' => $member->id, 'fullName' => $member->full_name, 'memberNumber' => $member->member_number, 'avatarColor' => $member->avatar_color] : null;

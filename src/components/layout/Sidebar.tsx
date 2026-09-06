@@ -3,21 +3,24 @@ import { useTranslation } from 'react-i18next'
 import { motion } from 'motion/react'
 import type { NavSection } from '@/app/nav'
 import { useSession } from '@/app/session'
+import { useOrg } from '@/app/org'
 import { cn } from '@/lib/cn'
 
 export function Sidebar({ sections, onNavigate }: { sections: NavSection[]; onNavigate?: () => void }) {
   const { t } = useTranslation()
   const { session } = useSession()
+  const { org } = useOrg()
   const role = session?.role
+  const initials = org.name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('') || 'BK'
 
   return (
     <nav className="flex h-full flex-col gap-6 overflow-y-auto px-3 py-5">
       <div className="flex items-center gap-2.5 px-3">
         <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary-800 font-display text-[13px] font-bold tracking-tight text-white">
-          BK
+          {initials}
         </span>
-        <div>
-          <p className="font-display text-[15px] font-bold leading-tight text-neutral-900">{t('app.name')}</p>
+        <div className="min-w-0">
+          <p className="truncate font-display text-[15px] font-bold leading-tight text-neutral-900">{org.name}</p>
           <p className="text-[11px] text-neutral-400">{t('app.tagline')}</p>
         </div>
       </div>

@@ -5,8 +5,10 @@ import { Download, UserPlus } from 'lucide-react'
 import { Button, Card, DataTable, PageHeader, SkeletonTable, StatusBadge, EmptyState, Avatar } from '@/components/ui'
 import type { Column } from '@/components/ui'
 import { ListToolbar } from '@/components/ListToolbar'
+import { RowActions } from '@/components/RowActions'
+import { useToast } from '@/components/ui'
 import { useApiQuery } from '@/lib/useApi'
-import { listMembers } from '@/api'
+import { deleteMember, listMembers } from '@/api'
 import { formatDate, formatMoney } from '@/lib/format'
 
 interface Row {
@@ -39,8 +41,19 @@ export default function MembersPage() {
     }),
     [search, status, gender],
   )
+  const toast = useToast()
   const { data, loading, error, refetch } = useApiQuery(() => listMembers(query), [query])
   const rows: Row[] = data?.data ?? []
+
+  async function remove(m: Row) {
+    try {
+      await deleteMember(m.id)
+      toast(`${m.fullName} — ${t('common.deleted')}`)
+      refetch()
+    } catch (e: any) {
+      toast(e?.message ?? t('common.error'), 'error')
+    }
+  }
 
   const columns: Column<Row>[] = [
     {
@@ -60,6 +73,16 @@ export default function MembersPage() {
     { key: 'savings', header: t('nav.savings'), align: 'right', sortValue: (m) => m.savingsBalance, render: (m) => formatMoney(m.savingsBalance, { compact: true }) },
     { key: 'joined', header: t('members.joined'), sortValue: (m) => m.registrationDate, render: (m) => <span className="text-[13px] text-neutral-500">{formatDate(m.registrationDate)}</span> },
     { key: 'status', header: t('common.status'), render: (m) => <StatusBadge status={m.status} label={t(`members.status.${m.status}`)} /> },
+    {
+      key: 'actions', header: '', align: 'right',
+      render: (m) => (
+        <RowActions
+          onEdit={() => navigate(`/admin/members/${m.id}/edit`)}
+          onDelete={() => remove(m)}
+          deleteMessage={t('common.confirmDelete')}
+        />
+      ),
+    },
   ]
 
   return (

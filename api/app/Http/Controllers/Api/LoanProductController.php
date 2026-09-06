@@ -34,6 +34,21 @@ class LoanProductController extends ApiController
         return $this->item($product->fresh());
     }
 
+    public function destroy(Request $request, string $id)
+    {
+        $product = LoanProduct::where('organization_id', $this->orgId($request))->findOrFail($id);
+        if ($product->loans()->exists()) {
+            $product->update(['status' => 'inactive']);
+            Audit::log($request, 'DEACTIVATE_PRODUCT', 'LoanProduct', $product->id);
+
+            return \App\Support\ApiResponse::message('Product has loans — deactivated instead of deleted');
+        }
+        $product->delete();
+        Audit::log($request, 'DELETE_PRODUCT', 'LoanProduct', $id);
+
+        return \App\Support\ApiResponse::message('Product removed');
+    }
+
     private function validated(Request $request, bool $partial = false): array
     {
         $rule = fn ($r) => $partial ? array_merge(['sometimes'], $r) : $r;

@@ -61,4 +61,30 @@ abstract class ApiController extends Controller
     {
         return ApiResponse::ok($map ? $map($model) : (new GenericResource($model))->resolve());
     }
+
+    /** Look up an org-scoped record or 404. */
+    protected function find(Request $request, string $modelClass, string $id)
+    {
+        return $modelClass::where('organization_id', $this->orgId($request))->findOrFail($id);
+    }
+
+    /** Generic validated update + audit. */
+    protected function crudUpdate(Request $request, $model, array $rules, string $entity)
+    {
+        $data = $request->validate($rules);
+        $before = $model->only(array_keys($data));
+        $model->update($data);
+        \App\Support\Audit::log($request, 'UPDATE_'.strtoupper($entity), $entity, $model->getKey(), $before, $data);
+
+        return $this->item($model->fresh());
+    }
+
+    /** Generic (soft) delete + audit. */
+    protected function crudDestroy(Request $request, $model, string $entity)
+    {
+        $model->delete();
+        \App\Support\Audit::log($request, 'DELETE_'.strtoupper($entity), $entity, $model->getKey());
+
+        return \App\Support\ApiResponse::message(ucfirst($entity).' removed');
+    }
 }

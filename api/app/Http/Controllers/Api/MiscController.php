@@ -111,6 +111,51 @@ class MiscController extends ApiController
         return ApiResponse::created((new \App\Http\Resources\GenericResource($user))->resolve(), 'User created');
     }
 
+    public function updateUser(Request $request, string $id)
+    {
+        $user = User::where('organization_id', $this->orgId($request))->findOrFail($id);
+        $data = $request->validate([
+            'name' => ['sometimes', 'string'],
+            'phone' => ['nullable', 'string'],
+            'status' => ['sometimes', 'in:active,suspended'],
+            'role' => ['sometimes', 'exists:roles,name'],
+        ]);
+        $user->update(collect($data)->except('role')->all());
+        if (isset($data['role'])) {
+            $user->syncRoles([$data['role']]);
+        }
+        Audit::log($request, 'UPDATE_USER', 'User', $user->id, null, $data);
+
+        return $this->item($user->fresh('roles'), fn ($u) => [
+            'id' => $u->id, 'name' => $u->name, 'email' => $u->email, 'phone' => $u->phone,
+            'role' => $u->roles->first()?->name, 'status' => $u->status,
+        ]);
+    }
+
+    public function destroyUser(Request $request, string $id)
+    {
+        $user = User::where('organization_id', $this->orgId($request))->findOrFail($id);
+        if ($user->id === $request->user()->id) {
+            return ApiResponse::error('SELF_DELETE', 'You cannot delete your own account.', 422);
+        }
+        if ($user->hasRole('super_admin')) {
+            return ApiResponse::error('PROTECTED', 'The super admin account cannot be deleted.', 422);
+        }
+        $user->tokens()->delete();
+        $user->delete();
+        Audit::log($request, 'DELETE_USER', 'User', $id);
+
+        return ApiResponse::message('User removed');
+    }
+
+    public function destroyNotification(Request $request, string $id)
+    {
+        Notification::where('organization_id', $this->orgId($request))->where('id', $id)->delete();
+        Audit::log($request, 'DELETE_NOTIFICATION', 'Notification', $id);
+
+        return ApiResponse::message('Notification removed');
+    }
+
     public function roles(Request $request)
     {
         $roles = Role::with('permissions')->get()->map(fn (Role $r) => [

@@ -57,6 +57,29 @@ class ProjectController extends ApiController
         return ApiResponse::created($this->row($project), 'Project created');
     }
 
+    public function update(Request $request, string $id)
+    {
+        $project = $this->find($request, Project::class, $id);
+
+        return $this->crudUpdate($request, $project, [
+            'name' => ['sometimes', 'string'],
+            'description' => ['nullable', 'string'],
+            'type' => ['sometimes', 'in:monthly,three_months,long_term,custom'],
+            'capital_required' => ['sometimes', 'integer', 'min:0'],
+            'expected_profit' => ['sometimes', 'integer', 'min:0'],
+            'actual_profit' => ['sometimes', 'integer', 'min:0'],
+            'start_date' => ['nullable', 'date'],
+            'end_date' => ['nullable', 'date'],
+            'manager' => ['nullable', 'string'],
+            'status' => ['sometimes', 'in:planned,active,completed,cancelled'],
+        ], 'Project');
+    }
+
+    public function destroy(Request $request, string $id)
+    {
+        return $this->crudDestroy($request, $this->find($request, Project::class, $id), 'Project');
+    }
+
     public function invest(Request $request, string $id)
     {
         $data = $request->validate([

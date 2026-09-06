@@ -3,10 +3,25 @@
 namespace App\Http\Controllers\Api;
 
 use App\Models\ProfitDistribution;
+use App\Support\ApiResponse;
+use App\Support\Audit;
 use Illuminate\Http\Request;
 
 class ProfitDistributionController extends ApiController
 {
+    public function destroy(Request $request, string $id)
+    {
+        $dist = $this->find($request, ProfitDistribution::class, $id);
+        if (in_array($dist->status, ['approved', 'distributed'])) {
+            return ApiResponse::error('LOCKED', 'A distributed allocation cannot be deleted.', 422);
+        }
+        $dist->allocations()->delete();
+        $dist->delete();
+        Audit::log($request, 'DELETE_PROFIT_DISTRIBUTION', 'ProfitDistribution', $id);
+
+        return ApiResponse::message('Distribution removed');
+    }
+
     public function index(Request $request)
     {
         return $this->items(

@@ -130,6 +130,38 @@ class InsuranceController extends ApiController
         return $this->item($claim->fresh());
     }
 
+    public function updateAccount(Request $request, string $id)
+    {
+        return $this->crudUpdate($request, $this->find($request, InsuranceAccount::class, $id), [
+            'plan_name' => ['sometimes', 'string'],
+            'monthly_contribution' => ['sometimes', 'integer', 'min:0'],
+            'coverage_amount' => ['sometimes', 'integer', 'min:0'],
+            'end_date' => ['nullable', 'date'],
+            'status' => ['sometimes', 'in:active,expired,suspended,cancelled'],
+        ], 'InsuranceAccount');
+    }
+
+    public function destroyAccount(Request $request, string $id)
+    {
+        $acc = $this->find($request, InsuranceAccount::class, $id);
+        $acc->update(['status' => 'cancelled']);
+        Audit::log($request, 'CANCEL_INSURANCE', 'InsuranceAccount', $acc->id);
+
+        return \App\Support\ApiResponse::message('Insurance account cancelled');
+    }
+
+    public function destroyClaim(Request $request, string $id)
+    {
+        $claim = $this->find($request, InsuranceClaim::class, $id);
+        if (in_array($claim->status, ['paid'])) {
+            return \App\Support\ApiResponse::error('LOCKED', 'A paid claim cannot be removed.', 422);
+        }
+        $claim->update(['status' => 'cancelled']);
+        Audit::log($request, 'CANCEL_CLAIM', 'InsuranceClaim', $claim->id);
+
+        return \App\Support\ApiResponse::message('Claim cancelled');
+    }
+
     private function m($member): ?array
     {
         return $member ? ['id' => $member->id, 'fullName' => $member->full_name, 'memberNumber' => $member->member_number, 'avatarColor' => $member->avatar_color] : null;

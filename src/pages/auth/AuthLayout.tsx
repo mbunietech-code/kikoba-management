@@ -2,9 +2,12 @@ import type { ReactNode } from 'react'
 import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 import { LanguageToggle } from '@/components/LanguageToggle'
+import { useOrg } from '@/app/org'
 
 export function AuthLayout({ children }: { children: ReactNode }) {
   const { t } = useTranslation()
+  const { org } = useOrg()
+  const initials = org.name.split(' ').filter(Boolean).slice(0, 2).map((w) => w[0]?.toUpperCase()).join('') || 'BK'
   return (
     <div className="flex min-h-screen bg-neutral-100">
       {/* brand panel */}
@@ -13,10 +16,10 @@ export function AuthLayout({ children }: { children: ReactNode }) {
         <div className="relative flex h-full flex-col justify-between p-12 text-white">
           <div className="flex items-center gap-3">
             <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/15 font-display text-base font-bold tracking-tight backdrop-blur">
-              BK
+              {initials}
             </span>
             <div>
-              <p className="font-display text-lg font-bold">{t('app.name')}</p>
+              <p className="font-display text-lg font-bold">{org.name}</p>
               <p className="text-sm text-white/60">{t('app.tagline')}</p>
             </div>
           </div>

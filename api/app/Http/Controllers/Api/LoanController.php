@@ -125,6 +125,18 @@ class LoanController extends ApiController
         return $this->item($loan);
     }
 
+    public function cancel(Request $request, string $id)
+    {
+        $loan = Loan::where('organization_id', $this->orgId($request))->findOrFail($id);
+        if (in_array($loan->status, ['active', 'overdue', 'completed', 'defaulted'])) {
+            return ApiResponse::error('LOCKED', 'A disbursed loan cannot be cancelled — record repayments or a reversal instead.', 422);
+        }
+        $loan->update(['status' => 'cancelled']);
+        \App\Support\Audit::log($request, 'CANCEL_LOAN', 'Loan', $loan->id, null, ['status' => 'cancelled']);
+
+        return $this->item($loan->fresh());
+    }
+
     public function repay(Request $request, string $id)
     {
         $data = $request->validate([

@@ -72,6 +72,11 @@ export default {
     settings: 'Settings',
     help: 'Help',
     language: 'Language',
+    confirmDelete: 'This cannot be undone. Are you sure you want to delete this?',
+    deleted: 'Deleted',
+    reverse: 'Reverse',
+    cancelRecord: 'Cancel',
+    manage: 'Manage',
   },
   nav: {
     dashboard: 'Dashboard',

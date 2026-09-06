@@ -67,4 +67,31 @@ class ShareController extends ApiController
 
         return ApiResponse::created((new \App\Http\Resources\GenericResource($share))->resolve(), 'Share purchase recorded');
     }
+
+    public function update(Request $request, string $id)
+    {
+        $share = Share::where('organization_id', $this->orgId($request))->findOrFail($id);
+        $data = $request->validate([
+            'quantity' => ['sometimes', 'integer', 'min:1'],
+            'price_per_share' => ['sometimes', 'integer', 'min:1'],
+            'purchased_at' => ['sometimes', 'date'],
+            'status' => ['sometimes', 'in:confirmed,pending'],
+        ]);
+        $share->fill($data);
+        $share->total_value = $share->quantity * $share->price_per_share;
+        $before = $share->getOriginal();
+        $share->save();
+        Audit::log($request, 'UPDATE_SHARE', 'Share', $share->id, ['total_value' => $before['total_value']], ['total_value' => $share->total_value]);
+
+        return $this->item($share->fresh());
+    }
+
+    public function destroy(Request $request, string $id)
+    {
+        $share = Share::where('organization_id', $this->orgId($request))->findOrFail($id);
+        $share->delete();
+        Audit::log($request, 'DELETE_SHARE', 'Share', $id);
+
+        return ApiResponse::message('Share record removed');
+    }
 }

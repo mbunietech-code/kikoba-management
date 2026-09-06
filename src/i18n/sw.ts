@@ -72,6 +72,11 @@ export default {
     settings: 'Mipangilio',
     help: 'Msaada',
     language: 'Lugha',
+    confirmDelete: 'Hatua hii haiwezi kutenduliwa. Una uhakika unataka kufuta?',
+    deleted: 'Imefutwa',
+    reverse: 'Batilisha',
+    cancelRecord: 'Ghairi',
+    manage: 'Simamia',
   },
   nav: {
     dashboard: 'Dashibodi',
