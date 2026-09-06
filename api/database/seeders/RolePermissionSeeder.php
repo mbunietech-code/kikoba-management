@@ -34,8 +34,9 @@ class RolePermissionSeeder extends Seeder
         'super_admin' => '*',
         'admin' => [
             'members.*', 'shares.*', 'savings.*', 'loans.*', 'products.*', 'guarantors.*',
-            'projects.*', 'insurance.*', 'payments.*', 'reports.view', 'profit.*',
-            'notifications.*', 'users.*', 'roles.manage', 'settings.*', 'audit.view', 'dashboard.view',
+            'projects.*', 'insurance.*', 'payments.*', 'accounting.*',
+            'reports.view', 'profit.*', 'notifications.*', 'users.*', 'roles.manage',
+            'settings.*', 'audit.view', 'dashboard.view',
         ],
         'treasurer' => [
             'members.view', 'savings.*', 'payments.*', 'loans.view', 'loans.disburse', 'loans.repay',

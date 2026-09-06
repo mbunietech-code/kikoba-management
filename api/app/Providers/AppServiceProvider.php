@@ -18,7 +18,8 @@ class AppServiceProvider extends ServiceProvider
         // WAMP MySQL / older InnoDB index-length compatibility.
         Schema::defaultStringLength(191);
 
-        Model::shouldBeStrict(! $this->app->isProduction());
-        Model::unguard(false);
+        Model::preventLazyLoading(false);
+        Model::preventAccessingMissingAttributes(false);
+        Model::preventSilentlyDiscardingAttributes(false);
     }
 }
