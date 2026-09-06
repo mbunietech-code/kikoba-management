@@ -2,42 +2,62 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Download, UserPlus } from 'lucide-react'
-import {
-  Button, Card, DataTable, PageHeader, SkeletonTable, StatusBadge,
-} from '@/components/ui'
+import { Button, Card, DataTable, PageHeader, SkeletonTable, StatusBadge, EmptyState, Avatar } from '@/components/ui'
 import type { Column } from '@/components/ui'
 import { ListToolbar } from '@/components/ListToolbar'
-import { MemberCell } from '@/components/MemberCell'
-import { useMockQuery } from '@/lib/useMockQuery'
+import { useApiQuery } from '@/lib/useApi'
+import { listMembers } from '@/api'
 import { formatDate, formatMoney } from '@/lib/format'
-import { members, savingsAccounts, shares } from '@/mock/data'
-import type { Member } from '@/types'
+
+interface Row {
+  id: string
+  memberNumber: string
+  fullName: string
+  phone: string
+  email: string
+  gender: string
+  status: string
+  avatarColor?: string
+  registrationDate: string
+  sharesValue: number
+  savingsBalance: number
+}
 
 export default function MembersPage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { data, loading } = useMockQuery(() => members, [])
   const [search, setSearch] = useState('')
   const [status, setStatus] = useState('all')
   const [gender, setGender] = useState('all')
 
-  const rows = useMemo(() => {
-    return (data ?? []).filter((m) => {
-      if (status !== 'all' && m.status !== status) return false
-      if (gender !== 'all' && m.gender !== gender) return false
-      if (search && !`${m.fullName} ${m.memberNumber} ${m.phone} ${m.email}`.toLowerCase().includes(search.toLowerCase())) return false
-      return true
-    })
-  }, [data, search, status, gender])
+  const query = useMemo(
+    () => ({
+      search: search || undefined,
+      status: status === 'all' ? undefined : status,
+      gender: gender === 'all' ? undefined : gender,
+      per_page: 100,
+    }),
+    [search, status, gender],
+  )
+  const { data, loading, error, refetch } = useApiQuery(() => listMembers(query), [query])
+  const rows: Row[] = data?.data ?? []
 
-  const shareValue = (id: string) => shares.filter((s) => s.memberId === id).reduce((a, s) => a + s.totalValue, 0)
-  const savingsBal = (id: string) => savingsAccounts.find((a) => a.memberId === id)?.balance ?? 0
-
-  const columns: Column<Member>[] = [
-    { key: 'name', header: t('members.fullName'), sortValue: (m) => m.fullName, render: (m) => <MemberCell memberId={m.id} /> },
+  const columns: Column<Row>[] = [
+    {
+      key: 'name', header: t('members.fullName'), sortValue: (m) => m.fullName,
+      render: (m) => (
+        <span className="flex items-center gap-2.5">
+          <Avatar name={m.fullName} color={m.avatarColor} size="sm" />
+          <span className="min-w-0">
+            <span className="block truncate text-[13.5px] font-medium text-neutral-800">{m.fullName}</span>
+            <span className="block text-[11px] text-neutral-400">{m.memberNumber}</span>
+          </span>
+        </span>
+      ),
+    },
     { key: 'phone', header: t('common.phone'), render: (m) => <span className="text-[13px] text-neutral-500">{m.phone}</span> },
-    { key: 'shares', header: t('nav.shares'), align: 'right', sortValue: (m) => shareValue(m.id), render: (m) => formatMoney(shareValue(m.id), { compact: true }) },
-    { key: 'savings', header: t('nav.savings'), align: 'right', sortValue: (m) => savingsBal(m.id), render: (m) => formatMoney(savingsBal(m.id), { compact: true }) },
+    { key: 'shares', header: t('nav.shares'), align: 'right', sortValue: (m) => m.sharesValue, render: (m) => formatMoney(m.sharesValue, { compact: true }) },
+    { key: 'savings', header: t('nav.savings'), align: 'right', sortValue: (m) => m.savingsBalance, render: (m) => formatMoney(m.savingsBalance, { compact: true }) },
     { key: 'joined', header: t('members.joined'), sortValue: (m) => m.registrationDate, render: (m) => <span className="text-[13px] text-neutral-500">{formatDate(m.registrationDate)}</span> },
     { key: 'status', header: t('common.status'), render: (m) => <StatusBadge status={m.status} label={t(`members.status.${m.status}`)} /> },
   ]
@@ -82,7 +102,9 @@ export default function MembersPage() {
       />
 
       <Card>
-        {loading ? (
+        {error ? (
+          <EmptyState title={t('common.error')} hint={error.message} action={<Button onClick={refetch}>{t('common.retry')}</Button>} />
+        ) : loading ? (
           <SkeletonTable />
         ) : (
           <DataTable

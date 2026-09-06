@@ -43,3 +43,7 @@ mobile/ios/Pods/
 
 # ---------- OS ----------
 Thumbs.db
+
+# local env (use .env.example as template)
+.env
+api/.env.bak
