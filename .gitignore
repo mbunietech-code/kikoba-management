@@ -1,25 +1,38 @@
-# ---------- Node / web (Vite) ----------
-logs
+# ---------- Laravel ----------
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-node_modules
-dist
-dist-ssr
-*.local
+.env
+.env.backup
+.env.production
+.phpactor.json
+.phpunit.result.cache
+/.phpunit.cache
+/auth.json
+/node_modules
+/public/fonts-manifest.dev.json
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+_ide_helper.php
+Homestead.json
+Homestead.yaml
 
-# ---------- Editor ----------
-.vscode/*
-!.vscode/extensions.json
-.idea
+# Compiled front-end assets ARE committed on purpose: the production host
+# (Hostinger shared) has no Node/npm. Run `npm run build` after changing
+# anything under resources/css or resources/js, then commit public/build.
+!/public/build
+
+# ---------- Editors / OS ----------
+/.idea
+/.nova
+/.vscode
+/.zed
+/.codex
+/.cursor/
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+Thumbs.db
+*.iml
 
 # ---------- Flutter / Dart (mobile/) ----------
 mobile/.dart_tool/
@@ -28,7 +41,6 @@ mobile/.flutter-plugins-dependencies
 mobile/build/
 mobile/.pub-cache/
 mobile/.pub/
-**/generated_plugin_registrant.*
 mobile/android/.gradle/
 mobile/android/app/debug/
 mobile/android/app/profile/
@@ -39,15 +51,8 @@ mobile/android/**/GeneratedPluginRegistrant.*
 mobile/ios/Flutter/Flutter.framework
 mobile/ios/Flutter/Flutter.podspec
 mobile/ios/Pods/
-*.iml
+**/generated_plugin_registrant.*
 
-# ---------- OS ----------
-Thumbs.db
-
-# local env (use .env.example as template)
-.env
-api/.env.bak
-
-# Local tooling
+# ---------- Local tooling ----------
 /ngrok.exe
 *.exe
