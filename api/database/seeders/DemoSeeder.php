@@ -42,6 +42,16 @@ class DemoSeeder extends Seeder
 
     public function run(): void
     {
+        // One-shot starter dataset. Most rows below use create(), so re-running
+        // after a successful seed would raise duplicate-key errors — bail early
+        // if the sample data is already in place (e.g. `migrate --seed` on a
+        // database that has nothing to migrate).
+        if (Member::query()->exists()) {
+            $this->command?->warn('DemoSeeder: sample data already present — skipping.');
+
+            return;
+        }
+
         $this->today = Carbon::create(2026, 9, 6);
 
         $this->org = Organization::firstOrCreate(
