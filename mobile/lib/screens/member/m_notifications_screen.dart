@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../app/session.dart';
+import '../../data/api.dart';
 import '../../data/format.dart';
 import '../../data/mock_data.dart';
 import '../../i18n/strings.dart';
@@ -14,7 +17,7 @@ class MNotificationsScreen extends StatefulWidget {
 }
 
 class _MNotificationsScreenState extends State<MNotificationsScreen> {
-  final List<AppNotification> _items = List.of(mock.notifications);
+  List<AppNotification> get _items => mock.notifications;
 
   IconData _icon(String ch) => switch (ch) {
         'sms' => Icons.sms_outlined,
@@ -33,11 +36,15 @@ class _MNotificationsScreenState extends State<MNotificationsScreen> {
       showBackButton: true,
       actions: [
         TextButton(
-          onPressed: () => setState(() {
-            for (final n in _items) {
-              n.read = true;
-            }
-          }),
+          onPressed: unread == 0
+              ? null
+              : () async {
+                  final session = context.read<Session>();
+                  try {
+                    await Api.meMarkAllRead();
+                    await session.refresh();
+                  } catch (_) {}
+                },
           child: Text(t('notifications.markAllRead'), style: const TextStyle(fontSize: 12)),
         ),
       ],
