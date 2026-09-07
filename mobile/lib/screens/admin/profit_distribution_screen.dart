@@ -15,16 +15,27 @@ class ProfitDistributionScreen extends StatefulWidget {
 }
 
 class _ProfitDistributionScreenState extends State<ProfitDistributionScreen> {
-  ProfitDistribution _selected = mock.profitDistributions.first;
+  ProfitDistribution? _sel;
 
   @override
   Widget build(BuildContext context) {
     final t = context.t;
+
+    if (mock.profitDistributions.isEmpty) {
+      return AppScaffold(
+        title: t('profit.title'),
+        subtitle: t('profit.subtitle'),
+        showBackButton: true,
+        body: EmptyState(icon: Icons.pie_chart_outline_rounded, title: t('common.noData')),
+      );
+    }
+
+    final selected = _sel ??= mock.profitDistributions.first;
     final totalShares = sumI(mock.shares.map((s) => s.totalValue));
     final allocations = mock.activeMembers.map((m) {
       final v = sumI(mock.shares.where((s) => s.memberId == m.id).map((s) => s.totalValue));
       final p = totalShares == 0 ? 0.0 : v / totalShares * 100;
-      return (m, p, (_selected.distributableProfit * p / 100).round());
+      return (m, p, (selected.distributableProfit * p / 100).round());
     }).toList()
       ..sort((a, b) => b.$3.compareTo(a.$3));
 
@@ -39,10 +50,10 @@ class _ProfitDistributionScreenState extends State<ProfitDistributionScreen> {
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: KCard(
-                onTap: () => setState(() => _selected = d),
+                onTap: () => setState(() => _sel = d),
                 padding: const EdgeInsets.all(12),
                 child: Row(children: [
-                  Icon(_selected.id == d.id ? Icons.radio_button_checked : Icons.radio_button_off, size: 18, color: _selected.id == d.id ? K.primary600 : K.neutral300),
+                  Icon(selected.id == d.id ? Icons.radio_button_checked : Icons.radio_button_off, size: 18, color: selected.id == d.id ? K.primary600 : K.neutral300),
                   const SizedBox(width: 10),
                   Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                     Text('${fmtDate(d.periodStart, style: 'short')} – ${fmtDate(d.periodEnd, style: 'short')}', style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
@@ -54,11 +65,11 @@ class _ProfitDistributionScreenState extends State<ProfitDistributionScreen> {
             ),
           const SizedBox(height: 10),
           Row(children: [
-            Expanded(child: StatCard(label: t('profit.totalProfit'), value: money(_selected.totalProfit, compact: true))),
+            Expanded(child: StatCard(label: t('profit.totalProfit'), value: money(selected.totalProfit, compact: true))),
             const SizedBox(width: 10),
-            Expanded(child: StatCard(label: t('profit.reservedAmount'), value: money(_selected.reservedAmount, compact: true), tone: Tone.neutral)),
+            Expanded(child: StatCard(label: t('profit.reservedAmount'), value: money(selected.reservedAmount, compact: true), tone: Tone.neutral)),
             const SizedBox(width: 10),
-            Expanded(child: StatCard(label: t('profit.distributableProfit'), value: money(_selected.distributableProfit, compact: true), tone: Tone.success)),
+            Expanded(child: StatCard(label: t('profit.distributableProfit'), value: money(selected.distributableProfit, compact: true), tone: Tone.success)),
           ]),
           const SizedBox(height: 14),
           SectionTitle('${t('profit.allocation')} · ${t('profit.basisShares')}'),

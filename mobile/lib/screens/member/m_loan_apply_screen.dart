@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../app/session.dart';
+import '../../data/api.dart';
+import '../../data/api_client.dart';
 import '../../data/format.dart';
 import '../../data/mock_data.dart';
 import '../../data/selectors.dart';
@@ -16,16 +20,51 @@ class MLoanApplyScreen extends StatefulWidget {
 }
 
 class _MLoanApplyScreenState extends State<MLoanApplyScreen> {
-  String _productId = mock.loanProducts.first.id;
+  String? _productId;
   double _amount = 1000000;
   double _period = 6;
+  bool _submitting = false;
+
+  Future<void> _submit(int amount, int period) async {
+    setState(() => _submitting = true);
+    final session = context.read<Session>();
+    final memberId = session.memberId ?? mock.currentMemberId;
+    try {
+      await Api.applyLoan({
+        'member_id': memberId,
+        'loan_product_id': _productId,
+        'amount': amount,
+        'period': period,
+        'purpose': '',
+      });
+      await session.refresh();
+      if (!mounted) return;
+      toast(context, '${context.t('common.submit')} ✓');
+      context.go('/member/loans');
+    } on ApiException catch (e) {
+      if (mounted) toast(context, e.message);
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final t = context.t;
     final id = currentMemberId(context);
     final pos = memberPosition(id);
-    final product = mock.loanProducts.firstWhere((p) => p.id == _productId);
+
+    if (mock.loanProducts.isEmpty) {
+      return AppScaffold(
+        title: t('member.applyLoan'),
+        subtitle: t('loans.newApplication'),
+        showBackButton: true,
+        body: EmptyState(icon: Icons.request_quote_outlined, title: t('common.noData')),
+      );
+    }
+    _productId ??= mock.loanProducts.first.id;
+    final product = mock.loanProducts.firstWhere((p) => p.id == _productId,
+        orElse: () => mock.loanProducts.first);
 
     final interest = (_amount * product.interestRate * _period / (100 * 12)).round();
     final fees = (_amount * product.processingFee / 100).round();
@@ -107,8 +146,10 @@ class _MLoanApplyScreenState extends State<MLoanApplyScreen> {
             width: double.infinity,
             height: 50,
             child: FilledButton(
-              onPressed: eligible ? () { toast(context, '${t('common.submit')} ✓'); context.go('/member/loans'); } : null,
-              child: Text(t('common.submit')),
+              onPressed: (eligible && !_submitting) ? () => _submit(_amount.round(), _period.round()) : null,
+              child: _submitting
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : Text(t('common.submit')),
             ),
           ),
         ],

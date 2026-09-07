@@ -1,5 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
+import '../data/api.dart';
+import '../data/api_client.dart';
+import '../data/format.dart' as fmt;
 import '../data/mock_data.dart';
 import '../models/models.dart';
 
@@ -7,74 +10,123 @@ class Session extends ChangeNotifier {
   Role? role;
   String name = '';
   String? memberId;
+  String orgName = 'Benja Kikoba';
+
+  /// True while the initial token check / hydration is running at app start.
+  bool booting = true;
+
+  /// True while a post-login hydration is in flight.
+  bool hydrating = false;
+
+  /// Set after a login that needs an OTP; the OTP screen reads it.
+  String? pendingOtpDestination;
+  String? pendingOtpDebugCode;
 
   bool get isAuthed => role != null;
   bool get isStaff => role != null && role != Role.member;
 
-  static const _k = 'benja.session';
+  /* --------------------------- startup --------------------------- */
 
-  Future<void> load() async {
-    final p = await SharedPreferences.getInstance();
-    final raw = p.getString(_k);
-    if (raw == null) return;
-    final parts = raw.split('|');
-    role = Role.values.firstWhere((r) => r.name == parts[0], orElse: () => Role.member);
-    name = parts.length > 1 ? parts[1] : '';
-    memberId = parts.length > 2 && parts[2].isNotEmpty ? parts[2] : null;
+  Future<void> bootstrap() async {
+    booting = true;
     notifyListeners();
-  }
-
-  Future<void> _persist() async {
-    final p = await SharedPreferences.getInstance();
-    if (role == null) {
-      await p.remove(_k);
-    } else {
-      await p.setString(_k, '${role!.name}|$name|${memberId ?? ''}');
+    try {
+      if (Api.hasSession) {
+        final user = await Api.me();
+        await _applyUser(user);
+      }
+    } catch (_) {
+      await ApiClient.instance.clear();
+      _reset();
+    } finally {
+      booting = false;
+      notifyListeners();
     }
   }
 
-  /// Demo sign-in: infer staff vs member from the email address.
-  void signIn(String emailOrPhone) {
-    final e = emailOrPhone.toLowerCase();
-    final staff = mock.staffUsers.where((u) => u.email.toLowerCase() == e).toList();
-    if (staff.isNotEmpty) {
-      role = staff.first.role;
-      name = staff.first.name;
-      memberId = null;
-    } else if (e.contains('admin') || e.contains('staff') || e.contains('kikoba.co.tz')) {
-      role = Role.admin;
-      name = mock.staffUsers.firstWhere((u) => u.role == Role.admin).name;
-      memberId = null;
-    } else {
-      role = Role.member;
-      memberId = mock.currentMemberId;
-      name = mock.memberName(mock.currentMemberId);
+  /* ----------------------------- auth ---------------------------- */
+
+  /// Returns true if signed in; false if an OTP step is now required
+  /// (see [pendingOtpDestination]). Throws [ApiException] on failure.
+  Future<bool> signIn(String login, String password) async {
+    final res = await Api.login(login.trim(), password);
+    if (res.needsOtp) {
+      pendingOtpDestination = res.otpDestination;
+      pendingOtpDebugCode = res.otpDebugCode;
+      notifyListeners();
+      return false;
     }
-    _persist();
+    await _applyUser(res.user!);
+    notifyListeners();
+    return true;
+  }
+
+  Future<void> verifyOtp(String code) async {
+    final user = await Api.verifyOtp(pendingOtpDestination!, code.trim());
+    pendingOtpDestination = null;
+    pendingOtpDebugCode = null;
+    await _applyUser(user);
     notifyListeners();
   }
 
-  void previewAs(Role r) {
-    if (r == Role.member) {
-      role = Role.member;
-      memberId = mock.currentMemberId;
-      name = mock.memberName(mock.currentMemberId);
-    } else {
-      role = r;
-      memberId = null;
-      name = mock.staffUsers
-          .firstWhere((u) => u.role == r, orElse: () => mock.staffUsers[1])
-          .name;
-    }
-    _persist();
+  Future<void> signOut() async {
+    await Api.logout();
+    mock.clear();
+    _reset();
     notifyListeners();
   }
 
-  void signOut() {
+  /* --------------------------- internal -------------------------- */
+
+  Future<void> _applyUser(Map<String, dynamic> user) async {
+    role = roleFromKey(user['role']?.toString() ??
+        (user['roles'] is List && (user['roles'] as List).isNotEmpty ? user['roles'][0].toString() : null));
+    name = user['name']?.toString() ?? '';
+    memberId = user['member_id']?.toString() ?? user['memberId']?.toString();
+    final org = user['organization'];
+    if (org is Map) {
+      orgName = org['name']?.toString() ?? orgName;
+      if (org['currency'] != null) fmt.currencyCode = org['currency'].toString();
+    }
+
+    hydrating = true;
+    notifyListeners();
+    try {
+      if (isStaff) {
+        await Api.hydrateStaff();
+        if (mock.dashboard['organization'] is Map) {
+          orgName = mock.dashboard['organization']['name']?.toString() ?? orgName;
+        }
+      } else if (memberId != null) {
+        await Api.hydrateMember(memberId!);
+      }
+    } catch (_) {
+      // leave whatever hydrated; screens degrade to empty states
+    } finally {
+      hydrating = false;
+    }
+  }
+
+  Future<void> refresh() async {
+    if (role == null) return;
+    hydrating = true;
+    notifyListeners();
+    try {
+      if (isStaff) {
+        await Api.hydrateStaff();
+      } else if (memberId != null) {
+        await Api.hydrateMember(memberId!);
+      }
+    } catch (_) {}
+    hydrating = false;
+    notifyListeners();
+  }
+
+  void _reset() {
     role = null;
     name = '';
     memberId = null;
-    _persist();
-    notifyListeners();
+    pendingOtpDestination = null;
+    pendingOtpDebugCode = null;
   }
 }

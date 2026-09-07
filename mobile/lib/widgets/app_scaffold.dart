@@ -60,7 +60,12 @@ class AppScaffold extends StatelessWidget {
           const SizedBox(width: 6),
         ],
       ),
-      body: SafeArea(child: body),
+      body: SafeArea(
+        child: RefreshIndicator(
+          onRefresh: () => context.read<Session>().refresh(),
+          child: body,
+        ),
+      ),
       floatingActionButton: floatingActionButton,
       bottomNavigationBar: currentRoute == null
           ? null
@@ -116,34 +121,12 @@ class AppScaffold extends StatelessWidget {
                 ),
             ],
             const Divider(height: 24),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(4, 4, 4, 6),
-              child: Text(t('common.previewAs').toUpperCase(),
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.5, color: K.neutral400)),
-            ),
-            Wrap(
-              spacing: 8,
-              children: [
-                for (final r in [Role.admin, Role.treasurer, Role.loanOfficer, Role.member])
-                  ChoiceChip(
-                    label: Text(t('users.roles.${roleKey(r)}')),
-                    selected: session.role == r,
-                    onSelected: (_) {
-                      Navigator.pop(ctx);
-                      session.previewAs(r);
-                      context.go(r == Role.member ? '/member' : '/admin');
-                    },
-                  ),
-              ],
-            ),
-            const SizedBox(height: 8),
             ListTile(
               leading: const Icon(Icons.logout_rounded, size: 20, color: K.danger),
               title: Text(t('common.logout'), style: const TextStyle(color: K.danger, fontWeight: FontWeight.w600)),
               onTap: () {
                 Navigator.pop(ctx);
                 session.signOut();
-                context.go('/login');
               },
             ),
           ],
@@ -165,7 +148,6 @@ class _ProfileButton extends StatelessWidget {
       onSelected: (v) {
         if (v == 'logout') {
           session.signOut();
-          context.go('/login');
         } else if (v == 'profile') {
           context.go(session.isStaff ? '/admin/settings' : '/member/profile');
         }

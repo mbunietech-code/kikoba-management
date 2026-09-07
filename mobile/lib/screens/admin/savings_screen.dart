@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show FilteringTextInputFormatter;
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../app/session.dart';
+import '../../data/api.dart';
+import '../../data/api_client.dart';
 import '../../data/format.dart';
 import '../../data/mock_data.dart';
 import '../../data/selectors.dart';
@@ -83,20 +88,85 @@ class _SavingsScreenState extends State<SavingsScreen> {
 
   void _sheet(BuildContext context) {
     final t = context.t;
+    final session = context.read<Session>();
+    if (mock.savingsAccounts.isEmpty) {
+      toast(context, t('common.noData'));
+      return;
+    }
+    final amount = TextEditingController();
+    String accountId = mock.savingsAccounts.first.id;
+    bool withdrawal = false;
+    bool busy = false;
+
     showModalBottomSheet(
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom, left: 16, right: 16, top: 4),
-        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          Text(t('savings.recordDeposit'), style: Theme.of(ctx).textTheme.titleLarge),
-          const SizedBox(height: 12),
-          const TextField(decoration: InputDecoration(hintText: '0'), keyboardType: TextInputType.number),
-          const SizedBox(height: 16),
-          FilledButton(onPressed: () { Navigator.pop(ctx); toast(context, '${t('common.save')} ✓'); }, child: Text(t('common.save'))),
-          const SizedBox(height: 20),
-        ]),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setSheet) => Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom + 20, left: 16, right: 16, top: 4),
+          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Text(withdrawal ? t('savings.recordWithdrawal') : t('savings.recordDeposit'),
+                style: Theme.of(ctx).textTheme.titleLarge),
+            const SizedBox(height: 14),
+            SegmentedButton<bool>(
+              segments: [
+                ButtonSegment(value: false, label: Text(t('savings.deposit'))),
+                ButtonSegment(value: true, label: Text(t('savings.withdraw'))),
+              ],
+              selected: {withdrawal},
+              onSelectionChanged: (s) => setSheet(() => withdrawal = s.first),
+            ),
+            const SizedBox(height: 12),
+            DropdownButtonFormField<String>(
+              initialValue: accountId,
+              isExpanded: true,
+              decoration: InputDecoration(labelText: t('savings.accounts')),
+              items: mock.savingsAccounts
+                  .map((a) => DropdownMenuItem(
+                        value: a.id,
+                        child: Text('${mock.memberById(a.memberId)?.fullName ?? a.accountNumber} · ${money(a.balance, compact: true)}',
+                            overflow: TextOverflow.ellipsis),
+                      ))
+                  .toList(),
+              onChanged: (v) => setSheet(() => accountId = v!),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: amount,
+              decoration: InputDecoration(labelText: t('common.amount'), hintText: '0'),
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: busy
+                  ? null
+                  : () async {
+                      final amt = int.tryParse(amount.text.trim()) ?? 0;
+                      if (amt <= 0) return;
+                      setSheet(() => busy = true);
+                      try {
+                        final body = {'account_id': accountId, 'amount': amt};
+                        if (withdrawal) {
+                          await Api.withdraw(body);
+                        } else {
+                          await Api.deposit(body);
+                        }
+                        if (ctx.mounted) Navigator.pop(ctx);
+                        await session.refresh();
+                        if (context.mounted) toast(context, '${t('common.save')} ✓');
+                      } on ApiException catch (e) {
+                        setSheet(() => busy = false);
+                        if (ctx.mounted) toast(ctx, e.message);
+                      }
+                    },
+              child: busy
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                  : Text(t('common.save')),
+            ),
+          ]),
+        ),
       ),
     );
   }

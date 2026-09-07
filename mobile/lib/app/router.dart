@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'session.dart';
 
+import '../screens/auth/splash_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/otp_screen.dart';
 import '../screens/auth/forgot_screen.dart';
@@ -66,20 +67,29 @@ GoRouter buildRouter(Session session) {
       GoRoute(path: path, pageBuilder: (_, s) => _page(b(s)));
 
   return GoRouter(
-    initialLocation: '/',
+    initialLocation: '/splash',
     refreshListenable: session,
     redirect: (context, state) {
-      final authed = session.isAuthed;
       final loc = state.matchedLocation;
+      if (session.booting) return loc == '/splash' ? null : '/splash';
+
+      final authed = session.isAuthed;
       final onAuth = loc == '/login' || loc == '/verify-otp' || loc == '/forgot-password';
-      if (!authed) return onAuth ? null : '/login';
-      if (loc == '/' || onAuth) return session.isStaff ? '/admin' : '/member';
+
+      if (loc == '/splash' || loc == '/') {
+        return authed ? (session.isStaff ? '/admin' : '/member') : '/login';
+      }
+      if (!authed) {
+        if (loc == '/verify-otp' && session.pendingOtpDestination != null) return null;
+        return onAuth ? (loc == '/verify-otp' ? '/login' : null) : '/login';
+      }
+      if (onAuth) return session.isStaff ? '/admin' : '/member';
       if (loc.startsWith('/admin') && !session.isStaff) return '/member';
       if (loc.startsWith('/member') && session.isStaff) return '/admin';
       return null;
     },
     routes: [
-      GoRoute(path: '/', redirect: (_, __) => '/login'),
+      r('/splash', (_) => const SplashScreen()),
       r('/login', (_) => const LoginScreen()),
       r('/verify-otp', (_) => const OtpScreen()),
       r('/forgot-password', (_) => const ForgotScreen()),

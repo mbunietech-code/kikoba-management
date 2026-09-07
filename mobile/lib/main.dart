@@ -12,9 +12,11 @@ Future<void> main() async {
     const SystemUiOverlayStyle(statusBarColor: Colors.transparent, statusBarIconBrightness: Brightness.dark),
   );
   final session = Session();
-  await session.load();
   final locale = AppLocale('en');
-  runApp(BenjaKikobaApp(session: session, locale: locale));
+  final app = BenjaKikobaApp(session: session, locale: locale);
+  runApp(app);
+  // Restore any saved session (token → /auth/me → hydrate) after first frame.
+  session.bootstrap();
 }
 
 class BenjaKikobaApp extends StatelessWidget {

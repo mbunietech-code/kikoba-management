@@ -77,8 +77,8 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('savings/deposit', [SavingsController::class, 'deposit'])->middleware('permission:savings.deposit');
     Route::post('savings/withdraw', [SavingsController::class, 'withdraw'])->middleware('permission:savings.withdraw');
 
-    // loan products
-    Route::get('loan-products', [LoanProductController::class, 'index'])->middleware('permission:products.view');
+    // loan products (any authenticated user may view the catalogue, e.g. to apply)
+    Route::get('loan-products', [LoanProductController::class, 'index']);
     Route::post('loan-products', [LoanProductController::class, 'store'])->middleware('permission:products.manage');
     Route::match(['put', 'patch'], 'loan-products/{id}', [LoanProductController::class, 'update'])->middleware('permission:products.manage');
     Route::delete('loan-products/{id}', [LoanProductController::class, 'destroy'])->middleware('permission:products.manage');
