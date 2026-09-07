@@ -45,7 +45,7 @@ class Loan extends BaseModel
 
     public function product(): BelongsTo
     {
-        return $this->belongsTo(LoanProduct::class, 'loan_product_id');
+        return $this->belongsTo(LoanProduct::class, 'loan_product_id')->withTrashed();
     }
 
     public function guarantors(): HasMany
