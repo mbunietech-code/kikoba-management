@@ -85,10 +85,32 @@
                         :align="['','','right','right','right','']"
                         :rows="$loan->repayments->map(fn($r) => [fdate($r->payment_date), $r->reference, money($r->principal_paid), money($r->interest_paid), money($r->total_paid), t('payments.methods.'.$r->method)])" />
                 @elseif ($tab === 'guarantors')
-                    <x-mini-table :head="[t('guarantors.guarantor'), t('guarantors.guaranteedAmount'), t('common.status'), '']"
-                        :align="['','right','','right']" html
-                        :rows="$loan->guarantors->map(fn($g) => [e($g->guarantorMember?->full_name), money($g->guaranteed_amount), ucfirst($g->status),
-                            $g->status !== 'released' ? '<form method=POST action='.route('admin.guarantors.destroy',$g).'>'.csrf_field().method_field('DELETE').'<button class=\"k-btn k-btn-outlined k-btn-sm\">'.t('guarantors.status.released').'</button></form>' : ''])" />
+                    <table class="w-full text-sm">
+                        <thead><tr class="border-b border-neutral-200 text-left text-[11px] uppercase tracking-wide text-neutral-500">
+                            <th class="px-2 py-2.5">{{ t('guarantors.guarantor') }}</th>
+                            <th class="px-2 py-2.5 text-right">{{ t('guarantors.guaranteedAmount') }}</th>
+                            <th class="px-2 py-2.5">{{ t('common.status') }}</th>
+                            <th></th>
+                        </tr></thead>
+                        <tbody class="divide-y divide-neutral-100">
+                            @forelse ($loan->guarantors as $g)
+                                <tr>
+                                    <td class="px-2 py-2.5 text-[13px] font-medium">{{ $g->guarantorMember?->full_name ?? '—' }}</td>
+                                    <td class="px-2 py-2.5 text-right">{{ money($g->guaranteed_amount) }}</td>
+                                    <td class="px-2 py-2.5"><x-status :status="$g->status" /></td>
+                                    <td class="px-2 py-2.5 text-right">
+                                        @if ($g->status !== 'released')
+                                            <form method="POST" action="{{ route('admin.guarantors.destroy', $g) }}">@csrf @method('DELETE')
+                                                <button class="k-btn k-btn-outlined k-btn-sm">{{ t('guarantors.status.released') }}</button>
+                                            </form>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="4"><x-empty :title="t('common.noData')" /></td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
                 @endif
             </div>
         </x-card>

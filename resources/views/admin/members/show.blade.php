@@ -56,9 +56,28 @@
                         <x-mini-table :head="[t('common.date'), t('common.type'), t('common.amount'), t('savings.balanceAfter')]"
                             :rows="$member->savingsTransactions->map(fn($s) => [fdate($s->created_at), t('savings.txnType.'.$s->type), ($s->type==='deposit'?'+':'−').money($s->amount, symbol:false), money($s->balance_after)])" />
                     @elseif ($tab === 'loans')
-                        <x-mini-table :head="[t('loans.loanNumber'), t('loans.product'), t('loans.principal'), t('loans.outstanding'), t('common.status')]"
-                            :rows="$member->loans->map(fn($l) => ['<a class=\"text-primary-700 font-medium\" href=\"'.route('admin.loans.show',$l).'\">'.$l->loan_number.'</a>', e($l->product->name), money($l->principal_amount), money($l->outstanding_balance), '<span class=\"capitalize\">'.str_replace('_',' ',$l->status).'</span>'])"
-                            html />
+                        <table class="w-full text-sm">
+                            <thead><tr class="border-b border-neutral-200 text-left text-[11px] uppercase tracking-wide text-neutral-500">
+                                <th class="px-2 py-2.5">{{ t('loans.loanNumber') }}</th>
+                                <th class="px-2 py-2.5">{{ t('loans.product') }}</th>
+                                <th class="px-2 py-2.5 text-right">{{ t('loans.principal') }}</th>
+                                <th class="px-2 py-2.5 text-right">{{ t('loans.outstanding') }}</th>
+                                <th class="px-2 py-2.5">{{ t('common.status') }}</th>
+                            </tr></thead>
+                            <tbody class="divide-y divide-neutral-100">
+                                @forelse ($member->loans as $l)
+                                    <tr>
+                                        <td class="px-2 py-2.5"><a class="font-medium text-primary-700" href="{{ route('admin.loans.show', $l) }}">{{ $l->loan_number }}</a></td>
+                                        <td class="px-2 py-2.5 text-[13px]">{{ $l->product?->name ?? '—' }}</td>
+                                        <td class="px-2 py-2.5 text-right">{{ money($l->principal_amount) }}</td>
+                                        <td class="px-2 py-2.5 text-right">{{ money($l->outstanding_balance) }}</td>
+                                        <td class="px-2 py-2.5"><x-status :status="$l->status" /></td>
+                                    </tr>
+                                @empty
+                                    <tr><td colspan="5"><x-empty :title="t('common.noData')" /></td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     @elseif ($tab === 'insurance')
                         @if ($member->insuranceAccount)
                             <x-kv :items="[
