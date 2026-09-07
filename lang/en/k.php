@@ -198,6 +198,8 @@ return [
         'gender' => 'Gender',
         'dob' => 'Date of birth',
         'address' => 'Address',
+        'communityGroup' => 'Jamii (group)',
+        'communityGroupHint' => 'e.g. solidarity group / cell',
         'nextOfKin' => 'Next of kin',
         'nextOfKinPhone' => 'Next of kin phone',
         'registrationDate' => 'Registration date',

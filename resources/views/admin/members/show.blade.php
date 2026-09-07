@@ -45,6 +45,7 @@
                             ['label' => t('members.dob'), 'value' => fdate($member->date_of_birth)],
                             ['label' => t('members.registrationDate'), 'value' => fdate($member->registration_date)],
                             ['label' => t('members.address'), 'value' => e($member->address ?: '—')],
+                            ['label' => t('members.communityGroup'), 'value' => e($member->community_group ?: '—')],
                             ['label' => t('members.nextOfKin'), 'value' => e(($member->next_of_kin ?: '—').' · '.$member->next_of_kin_phone)],
                             ['label' => t('savings.accountNumber'), 'value' => $member->savingsAccount?->account_number ?? '—'],
                             ['label' => t('common.email'), 'value' => e($member->email ?: '—')],

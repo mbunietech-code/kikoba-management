@@ -198,6 +198,8 @@ return [
         'gender' => 'Jinsia',
         'dob' => 'Tarehe ya kuzaliwa',
         'address' => 'Anuani',
+        'communityGroup' => 'Jamii',
+        'communityGroupHint' => 'mf. kikundi cha dhamana / mtaa',
         'nextOfKin' => 'Ndugu wa karibu',
         'nextOfKinPhone' => 'Simu ya ndugu wa karibu',
         'registrationDate' => 'Tarehe ya usajili',

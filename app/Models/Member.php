@@ -15,7 +15,7 @@ class Member extends BaseModel
 
     protected $fillable = [
         'organization_id', 'user_id', 'member_number', 'full_name', 'phone', 'email',
-        'date_of_birth', 'gender', 'address', 'next_of_kin', 'next_of_kin_phone',
+        'date_of_birth', 'gender', 'address', 'community_group', 'next_of_kin', 'next_of_kin_phone',
         'registration_date', 'status', 'avatar_color',
     ];
 

@@ -34,7 +34,7 @@
                                     <x-avatar :name="$m->full_name" :color="$m->avatar_color" size="sm" />
                                     <div>
                                         <div class="text-[13.5px] font-medium text-neutral-800">{{ $m->full_name }}</div>
-                                        <div class="text-[11px] text-neutral-400">{{ $m->member_number }}</div>
+                                        <div class="text-[11px] text-neutral-400">{{ $m->member_number }}@if ($m->community_group) · {{ $m->community_group }}@endif</div>
                                     </div>
                                 </div>
                             </td>

@@ -27,8 +27,11 @@
                 <x-field :label="t('members.dob')" name="date_of_birth">
                     <x-input type="date" name="date_of_birth" :value="old('date_of_birth', optional($member->date_of_birth)->toDateString())" />
                 </x-field>
-                <x-field :label="t('members.address')" name="address" class="sm:col-span-2">
+                <x-field :label="t('members.address')" name="address">
                     <x-input name="address" :value="old('address', $member->address)" />
+                </x-field>
+                <x-field :label="t('members.communityGroup')" name="community_group">
+                    <x-input name="community_group" :value="old('community_group', $member->community_group)" :placeholder="t('members.communityGroupHint')" />
                 </x-field>
             </div>
         </x-card>

@@ -102,6 +102,7 @@ class MemberController extends Controller
             'gender' => ['nullable', 'in:male,female,other'],
             'date_of_birth' => ['nullable', 'date'],
             'address' => ['nullable', 'string'],
+            'community_group' => ['nullable', 'string', 'max:120'],
             'next_of_kin' => ['nullable', 'string'],
             'next_of_kin_phone' => ['nullable', 'string'],
             'status' => ['required', 'in:pending,active,suspended,inactive,deceased'],
