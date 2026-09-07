@@ -21,5 +21,5 @@ class SavingsTransaction extends BaseModel
 
     public function account() { return $this->belongsTo(SavingsAccount::class, 'savings_account_id'); }
 
-    public function member() { return $this->belongsTo(Member::class); }
+    public function member() { return $this->belongsTo(Member::class)->withTrashed(); }
 }

@@ -17,7 +17,7 @@ class LoanApplication extends BaseModel
     }
 
 
-    public function member() { return $this->belongsTo(Member::class); }
+    public function member() { return $this->belongsTo(Member::class)->withTrashed(); }
 
     public function product() { return $this->belongsTo(LoanProduct::class, 'loan_product_id'); }
 }

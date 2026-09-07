@@ -48,10 +48,10 @@
                 @forelse ($pendingApprovals as $l)
                     <li>
                         <a href="{{ route('admin.loans.show', $l) }}" class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50">
-                            <x-avatar :name="$l->member->full_name" :color="$l->member->avatar_color" size="sm" />
+                            <x-avatar :name="$l->member?->full_name ?? '—'" :color="$l->member?->avatar_color" size="sm" />
                             <span class="min-w-0 flex-1">
-                                <span class="block truncate text-[13.5px] font-medium text-neutral-800">{{ $l->member->full_name }}</span>
-                                <span class="block text-[11px] text-neutral-400">{{ $l->product->name }}</span>
+                                <span class="block truncate text-[13.5px] font-medium text-neutral-800">{{ $l->member?->full_name ?? t('common.noData') }}</span>
+                                <span class="block text-[11px] text-neutral-400">{{ $l->product?->name }}</span>
                             </span>
                             <span class="text-[13px] font-semibold">{{ money($l->principal_amount, true) }}</span>
                             <x-status :status="$l->status" :label="t('loans.status.'.$l->status)" />
@@ -66,11 +66,11 @@
         <x-card flush>
             <p class="px-4 pt-4 text-[15px] font-bold text-neutral-900">{{ t('dashboard.upcomingRepayments') }}</p>
             <ul class="mt-2 divide-y divide-neutral-100">
-                @foreach ($upcoming as $r)
+                @forelse ($upcoming as $r)
                     <li>
                         <a href="{{ route('admin.loans.show', $r->loan) }}" class="flex items-center gap-3 px-4 py-3 hover:bg-neutral-50">
-                            <x-avatar :name="$r->loan->member->full_name" :color="$r->loan->member->avatar_color" size="sm" />
-                            <span class="min-w-0 flex-1 truncate text-[13.5px] font-medium text-neutral-800">{{ $r->loan->member->full_name }}</span>
+                            <x-avatar :name="$r->loan?->member?->full_name ?? '—'" :color="$r->loan?->member?->avatar_color" size="sm" />
+                            <span class="min-w-0 flex-1 truncate text-[13.5px] font-medium text-neutral-800">{{ $r->loan?->member?->full_name ?? t('common.noData') }}</span>
                             <span class="text-right">
                                 <span class="block text-[13px] font-semibold">{{ money($r->total_due, true) }}</span>
                                 <span class="block text-[11px] text-neutral-400">{{ fdate($r->due_date) }}</span>
@@ -78,7 +78,9 @@
                             <x-badge :tone="$r->status === 'overdue' ? 'danger' : 'warning'" dot>{{ t('loans.scheduleStatus.'.$r->status) }}</x-badge>
                         </a>
                     </li>
-                @endforeach
+                @empty
+                    <li class="px-4 py-6 text-sm text-neutral-400">{{ t('common.noData') }}</li>
+                @endforelse
             </ul>
         </x-card>
     </div>

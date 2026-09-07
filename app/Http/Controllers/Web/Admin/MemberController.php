@@ -71,6 +71,22 @@ class MemberController extends Controller
 
     public function destroy(Request $request, Member $member)
     {
+        // SDD §39 — members tied to financial records are never removed; they
+        // are deactivated instead so loans / savings / transactions stay intact.
+        $hasRecords = $member->loans()->exists()
+            || $member->shares()->exists()
+            || (int) $member->savingsAccount?->balance > 0
+            || $member->projectInvestments()->exists()
+            || $member->insuranceAccount()->exists();
+
+        if ($hasRecords) {
+            $member->update(['status' => 'inactive']);
+            Audit::log($request, 'DEACTIVATE_MEMBER', 'Member', $member->id, null, ['status' => 'inactive']);
+
+            return redirect()->route('admin.members.show', $member)
+                ->with('toast', t('members.deactivatedInstead'));
+        }
+
         $member->delete();
         Audit::log($request, 'DELETE_MEMBER', 'Member', $member->id);
 

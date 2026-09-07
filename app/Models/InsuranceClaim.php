@@ -17,7 +17,7 @@ class InsuranceClaim extends BaseModel
     }
 
 
-    public function member() { return $this->belongsTo(Member::class); }
+    public function member() { return $this->belongsTo(Member::class)->withTrashed(); }
 
     public function account() { return $this->belongsTo(InsuranceAccount::class, 'insurance_account_id'); }
 }

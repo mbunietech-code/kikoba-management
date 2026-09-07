@@ -201,6 +201,7 @@ return [
         'nextOfKinPhone' => 'Simu ya ndugu wa karibu',
         'registrationDate' => 'Tarehe ya usajili',
         'joined' => 'Alijiunga',
+        'deactivatedInstead' => 'Mwanachama ana kumbukumbu za kifedha — amewekwa hali ya kutotumika badala ya kufutwa.',
         'male' => 'Mwanaume',
         'female' => 'Mwanamke',
         'other' => 'Nyingine',

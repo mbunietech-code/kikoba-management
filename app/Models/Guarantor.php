@@ -27,11 +27,11 @@ class Guarantor extends BaseModel
 
     public function borrower(): BelongsTo
     {
-        return $this->belongsTo(Member::class, 'member_id');
+        return $this->belongsTo(Member::class, 'member_id')->withTrashed();
     }
 
     public function guarantorMember(): BelongsTo
     {
-        return $this->belongsTo(Member::class, 'guarantor_member_id');
+        return $this->belongsTo(Member::class, 'guarantor_member_id')->withTrashed();
     }
 }

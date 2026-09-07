@@ -201,6 +201,7 @@ return [
         'nextOfKinPhone' => 'Next of kin phone',
         'registrationDate' => 'Registration date',
         'joined' => 'Joined',
+        'deactivatedInstead' => 'Member has financial records — set to inactive instead of deleting.',
         'male' => 'Male',
         'female' => 'Female',
         'other' => 'Other',

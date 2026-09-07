@@ -17,7 +17,7 @@ class Transaction extends BaseModel
     }
 
 
-    public function member() { return $this->belongsTo(Member::class); }
+    public function member() { return $this->belongsTo(Member::class)->withTrashed(); }
 
     public function payment() { return $this->belongsTo(Payment::class); }
 }

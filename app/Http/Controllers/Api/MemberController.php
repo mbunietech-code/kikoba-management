@@ -107,6 +107,20 @@ class MemberController extends ApiController
     public function destroy(Request $request, string $id)
     {
         $member = Member::where('organization_id', $this->orgId($request))->findOrFail($id);
+
+        $hasRecords = $member->loans()->exists()
+            || $member->shares()->exists()
+            || (int) $member->savingsAccount?->balance > 0
+            || $member->projectInvestments()->exists()
+            || $member->insuranceAccount()->exists();
+
+        if ($hasRecords) {
+            $member->update(['status' => 'inactive']);
+            Audit::log($request, 'DEACTIVATE_MEMBER', 'Member', $id, null, ['status' => 'inactive']);
+
+            return ApiResponse::message('Member has financial records — deactivated instead of deleted.');
+        }
+
         $member->delete();
         Audit::log($request, 'DELETE_MEMBER', 'Member', $id);
 

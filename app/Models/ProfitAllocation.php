@@ -16,7 +16,7 @@ class ProfitAllocation extends BaseModel
     }
 
 
-    public function member() { return $this->belongsTo(Member::class); }
+    public function member() { return $this->belongsTo(Member::class)->withTrashed(); }
 
     public function distribution() { return $this->belongsTo(ProfitDistribution::class, 'profit_distribution_id'); }
 }

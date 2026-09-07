@@ -19,5 +19,5 @@ class ProjectInvestment extends BaseModel
 
     public function project() { return $this->belongsTo(Project::class); }
 
-    public function member() { return $this->belongsTo(Member::class); }
+    public function member() { return $this->belongsTo(Member::class)->withTrashed(); }
 }

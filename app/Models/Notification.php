@@ -17,7 +17,7 @@ class Notification extends BaseModel
     }
 
 
-    public function member() { return $this->belongsTo(Member::class); }
+    public function member() { return $this->belongsTo(Member::class)->withTrashed(); }
 
     public function user() { return $this->belongsTo(User::class); }
 }

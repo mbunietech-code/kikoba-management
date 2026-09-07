@@ -17,7 +17,7 @@ class InsuranceAccount extends BaseModel
     }
 
 
-    public function member() { return $this->belongsTo(Member::class); }
+    public function member() { return $this->belongsTo(Member::class)->withTrashed(); }
 
     public function contributions() { return $this->hasMany(InsuranceContribution::class); }
 

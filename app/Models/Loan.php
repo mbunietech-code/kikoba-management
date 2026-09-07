@@ -40,7 +40,7 @@ class Loan extends BaseModel
 
     public function member(): BelongsTo
     {
-        return $this->belongsTo(Member::class);
+        return $this->belongsTo(Member::class)->withTrashed();
     }
 
     public function product(): BelongsTo

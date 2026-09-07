@@ -19,7 +19,7 @@ class SavingsAccount extends BaseModel
     }
 
 
-    public function member() { return $this->belongsTo(Member::class); }
+    public function member() { return $this->belongsTo(Member::class)->withTrashed(); }
 
     public function transactions() { return $this->hasMany(SavingsTransaction::class); }
 }

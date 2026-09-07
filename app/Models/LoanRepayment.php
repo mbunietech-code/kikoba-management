@@ -19,5 +19,5 @@ class LoanRepayment extends BaseModel
 
     public function loan() { return $this->belongsTo(Loan::class); }
 
-    public function member() { return $this->belongsTo(Member::class); }
+    public function member() { return $this->belongsTo(Member::class)->withTrashed(); }
 }
