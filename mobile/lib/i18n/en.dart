@@ -16,7 +16,7 @@ const Map<String, dynamic> enStrings = {
     'from': 'From', 'to': 'To', 'name': 'Name', 'phone': 'Phone', 'email': 'Email',
     'description': 'Description', 'notes': 'Notes', 'updated': 'Updated', 'created': 'Created',
     'logout': 'Log out', 'profile': 'Profile', 'settings': 'Settings', 'help': 'Help', 'language': 'Language',
-    'more': 'More', 'previewAs': 'Preview as',
+    'more': 'More', 'previewAs': 'Preview as', 'refresh': 'Refresh',
   },
   'nav': {
     'dashboard': 'Dashboard', 'members': 'Members', 'shares': 'Shares', 'savings': 'Savings',

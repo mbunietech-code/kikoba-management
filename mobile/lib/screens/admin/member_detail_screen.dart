@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import '../../app/session.dart';
+import '../../data/api.dart';
+import '../../data/api_client.dart';
 import '../../data/format.dart';
 import '../../data/mock_data.dart';
 import '../../data/selectors.dart';
@@ -31,6 +35,10 @@ class MemberDetailScreen extends StatelessWidget {
       showBackButton: true,
       actions: [
         IconButton(onPressed: () => context.go('/admin/members/$id/edit'), icon: const Icon(Icons.edit_outlined)),
+        IconButton(
+          onPressed: () => _confirmDelete(context, m.fullName),
+          icon: const Icon(Icons.delete_outline, color: K.danger),
+        ),
       ],
       body: DefaultTabController(
         length: 4,
@@ -146,6 +154,37 @@ class MemberDetailScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDelete(BuildContext context, String name) async {
+    final t = context.t;
+    final session = context.read<Session>();
+    final router = GoRouter.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('${t('common.delete')} — $name'),
+        content: Text(t('common.confirmDelete')),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: Text(t('common.cancel'))),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: K.danger),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(t('common.delete')),
+          ),
+        ],
+      ),
+    );
+    if (ok != true) return;
+    try {
+      await Api.deleteMember(id);
+      await session.refresh();
+      messenger.showSnackBar(SnackBar(content: Text(t('common.deleted'))));
+      router.go('/admin/members');
+    } on ApiException catch (e) {
+      messenger.showSnackBar(SnackBar(content: Text(e.message)));
+    }
   }
 
   Widget _list(List<Widget> children) => ListView.separated(

@@ -16,7 +16,7 @@ const Map<String, dynamic> swStrings = {
     'from': 'Kuanzia', 'to': 'Hadi', 'name': 'Jina', 'phone': 'Simu', 'email': 'Barua pepe',
     'description': 'Maelezo', 'notes': 'Maelezo ya ziada', 'updated': 'Imesasishwa', 'created': 'Imeundwa',
     'logout': 'Toka', 'profile': 'Wasifu', 'settings': 'Mipangilio', 'help': 'Msaada', 'language': 'Lugha',
-    'more': 'Zaidi', 'previewAs': 'Ona kama',
+    'more': 'Zaidi', 'previewAs': 'Ona kama', 'refresh': 'Onyesha upya',
   },
   'nav': {
     'dashboard': 'Dashibodi', 'members': 'Wanachama', 'shares': 'Hisa', 'savings': 'Akiba',

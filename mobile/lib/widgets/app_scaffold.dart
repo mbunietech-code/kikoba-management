@@ -55,6 +55,16 @@ class AppScaffold extends StatelessWidget {
         ),
         actions: [
           ...?actions,
+          if (currentRoute != null)
+            IconButton(
+              tooltip: t('common.refresh'),
+              icon: session.hydrating
+                  ? const SizedBox(
+                      width: 16, height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: K.neutral500))
+                  : const Icon(Icons.refresh_rounded, size: 20),
+              onPressed: session.hydrating ? null : () => session.refresh(),
+            ),
           const Padding(padding: EdgeInsets.symmetric(horizontal: 4), child: LangToggle()),
           _ProfileButton(),
           const SizedBox(width: 6),
