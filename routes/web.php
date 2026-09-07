@@ -49,6 +49,13 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::delete('/{share}', 'destroy')->name('destroy')->can('shares.create');
     });
 
+    Route::controller(Admin\OpeningShareController::class)->prefix('opening-shares')->name('opening-shares.')->group(function () {
+        Route::get('/', 'index')->name('index')->can('shares.view');
+        Route::post('/', 'store')->name('store')->can('shares.create');
+        Route::put('/{share}', 'update')->name('update')->can('shares.create');
+        Route::delete('/{share}', 'destroy')->name('destroy')->can('shares.create');
+    });
+
     Route::controller(Admin\SavingsController::class)->prefix('savings')->name('savings.')->group(function () {
         Route::get('/', 'index')->name('index')->can('savings.view');
         Route::get('/{account}', 'show')->name('show')->can('savings.view');

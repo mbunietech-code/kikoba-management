@@ -84,6 +84,7 @@ return [
         'dashboard' => 'Dashboard',
         'members' => 'Members',
         'shares' => 'Shares',
+        'openingShares' => 'Opening shares',
         'savings' => 'Savings',
         'loans' => 'Loans',
         'loanProducts' => 'Loan products',
@@ -221,6 +222,11 @@ return [
             'inactive' => 'Inactive',
             'deceased' => 'Deceased',
         ],
+    ],
+    'openingShares' => [
+        'title' => 'Opening shares',
+        'subtitle' => 'Entrance / initial shares recorded when members join.',
+        'recordPurchase' => 'Record opening shares',
     ],
     'shares' => [
         'title' => 'Shares',

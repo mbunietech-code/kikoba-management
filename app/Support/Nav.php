@@ -14,6 +14,7 @@ class Nav
             ['title' => 'nav.groupsMembers', 'items' => [
                 ['route' => 'admin.members.index', 'label' => 'nav.members', 'icon' => 'users', 'can' => 'members.view'],
                 ['route' => 'admin.shares.index', 'label' => 'nav.shares', 'icon' => 'chart-pie', 'can' => 'shares.view'],
+                ['route' => 'admin.opening-shares.index', 'label' => 'nav.openingShares', 'icon' => 'sparkles', 'can' => 'shares.view'],
                 ['route' => 'admin.insurance.index', 'label' => 'nav.insurance', 'icon' => 'shield-check', 'can' => 'insurance.view'],
             ]],
             ['title' => 'nav.groupsFinance', 'items' => [

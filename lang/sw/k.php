@@ -84,6 +84,7 @@ return [
         'dashboard' => 'Dashibodi',
         'members' => 'Wanachama',
         'shares' => 'Hisa',
+        'openingShares' => 'Hisa anzia',
         'savings' => 'Akiba',
         'loans' => 'Mikopo',
         'loanProducts' => 'Aina za mikopo',
@@ -221,6 +222,11 @@ return [
             'inactive' => 'Si hai',
             'deceased' => 'Marehemu',
         ],
+    ],
+    'openingShares' => [
+        'title' => 'Hisa anzia',
+        'subtitle' => 'Hisa za kujiunga / za awali zinazorekodiwa mwanachama anapojiunga.',
+        'recordPurchase' => 'Rekodi hisa anzia',
     ],
     'shares' => [
         'title' => 'Hisa',

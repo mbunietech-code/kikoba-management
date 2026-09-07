@@ -1,8 +1,8 @@
-@php $title = t('shares.title'); @endphp
+@php $title = t($i18n.'.title'); @endphp
 <x-layouts.app :title="$title">
-    <x-page-header :title="t('shares.title')" :subtitle="t('shares.subtitle')">
+    <x-page-header :title="t($i18n.'.title')" :subtitle="t($i18n.'.subtitle')">
         <x-slot:actions>
-            <x-btn icon="plus" x-data x-on:click="$dispatch('open-modal', 'share')">{{ t('shares.recordPurchase') }}</x-btn>
+            <x-btn icon="plus" x-data x-on:click="$dispatch('open-modal', 'share')">{{ t($i18n.'.recordPurchase') }}</x-btn>
         </x-slot:actions>
     </x-page-header>
 
@@ -28,13 +28,13 @@
                 <tbody class="divide-y divide-neutral-100">
                     @forelse ($shares as $s)
                         <tr class="hover:bg-neutral-50">
-                            <td class="px-4 py-3"><div class="flex items-center gap-2.5"><x-avatar :name="$s->member->full_name" :color="$s->member->avatar_color" size="sm" /><span><span class="block text-[13px] font-medium">{{ $s->member->full_name }}</span><span class="block text-[11px] text-neutral-400">{{ $s->member->member_number }}</span></span></div></td>
+                            <td class="px-4 py-3"><div class="flex items-center gap-2.5"><x-avatar :name="$s->member?->full_name ?? '—'" :color="$s->member?->avatar_color" size="sm" /><span><span class="block text-[13px] font-medium">{{ $s->member?->full_name ?? '—' }}</span><span class="block text-[11px] text-neutral-400">{{ $s->member?->member_number }}</span></span></div></td>
                             <td class="px-4 py-3 font-mono text-[12px] text-neutral-500">{{ $s->transaction_reference }}</td>
                             <td class="px-4 py-3 text-right">{{ num($s->quantity) }}</td>
                             <td class="px-4 py-3 text-right">{{ money($s->price_per_share) }}</td>
                             <td class="px-4 py-3 text-right font-medium">{{ money($s->total_value) }}</td>
                             <td class="px-4 py-3 text-[13px] text-neutral-500">{{ fdate($s->purchased_at) }}</td>
-                            <td class="px-4 py-3 text-right"><x-row-actions :delete="route('admin.shares.destroy', $s)" /></td>
+                            <td class="px-4 py-3 text-right"><x-row-actions :delete="route($rp.'.destroy', $s)" /></td>
                         </tr>
                     @empty
                         <tr><td colspan="7"><x-empty :title="t('common.noData')" /></td></tr>
@@ -45,8 +45,8 @@
         </x-card>
     </div>
 
-    <x-modal name="share" :title="t('shares.recordPurchase')">
-        <form method="POST" action="{{ route('admin.shares.store') }}" class="grid gap-4">
+    <x-modal name="share" :title="t($i18n.'.recordPurchase')">
+        <form method="POST" action="{{ route($rp.'.store') }}" class="grid gap-4">
             @csrf
             <x-field :label="t('common.member')"><x-select name="member_id">@foreach ($members as $m)<option value="{{ $m->id }}">{{ $m->full_name }} — {{ $m->member_number }}</option>@endforeach</x-select></x-field>
             <div class="grid grid-cols-2 gap-4">
