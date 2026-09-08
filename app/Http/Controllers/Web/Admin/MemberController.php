@@ -102,7 +102,7 @@ class MemberController extends Controller
             'full_name' => ['required', 'string', 'max:150'],
             'phone' => ['required', 'string', 'max:20'],
             'email' => ['nullable', 'email'],
-            'gender' => ['nullable', 'in:male,female,other'],
+            'gender' => ['nullable', 'in:male,female'],
             'date_of_birth' => ['nullable', 'date'],
             'address' => ['nullable', 'string'],
             'community_group' => ['nullable', 'string', 'max:120'],

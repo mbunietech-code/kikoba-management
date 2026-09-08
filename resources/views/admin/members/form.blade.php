@@ -19,7 +19,7 @@
                 <x-field :label="t('common.email')" name="email"><x-input type="email" name="email" :value="old('email', $member->email)" /></x-field>
                 <x-field :label="t('members.gender')" name="gender">
                     <x-select name="gender">
-                        @foreach (['female','male','other'] as $g)
+                        @foreach (['female','male'] as $g)
                             <option value="{{ $g }}" @selected(old('gender', $member->gender) === $g)>{{ t("members.$g") }}</option>
                         @endforeach
                     </x-select>
