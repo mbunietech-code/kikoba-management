@@ -16,6 +16,9 @@ class MemberController extends Controller
             ->with('savingsAccount:id,member_id,balance')
             ->when($request->status, fn ($q, $s) => $q->where('status', $s))
             ->when($request->gender, fn ($q, $g) => $q->where('gender', $g))
+            ->when($request->filled('group'), fn ($q) => $request->group === '__none__'
+                ? $q->where(fn ($w) => $w->whereNull('community_group')->orWhere('community_group', ''))
+                : $q->where('community_group', $request->group))
             ->when($request->q, fn ($q, $s) => $q->where(fn ($w) => $w
                 ->where('full_name', 'like', "%$s%")->orWhere('member_number', 'like', "%$s%")->orWhere('phone', 'like', "%$s%")))
             ->orderBy('member_number')

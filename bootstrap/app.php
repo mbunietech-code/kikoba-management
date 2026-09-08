@@ -18,6 +18,15 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Behind Hostinger / LiteSpeed (and most shared hosts) the app is
+        // reached over a proxy. Without this Laravel thinks requests are HTTP,
+        // generates http:// form actions, and POST/DELETE get 301'd to https —
+        // silently turning them into GET, so "nothing works".
+        $middleware->trustProxies(at: '*', headers: Request::HEADER_X_FORWARDED_FOR
+            | Request::HEADER_X_FORWARDED_HOST
+            | Request::HEADER_X_FORWARDED_PORT
+            | Request::HEADER_X_FORWARDED_PROTO);
+
         $middleware->api(prepend: [
             ForceJsonResponse::class,
         ]);
@@ -31,6 +40,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'feature' => \App\Http\Middleware\EnsureFeatureEnabled::class,
         ]);
 
         $middleware->redirectGuestsTo(fn () => route('login'));

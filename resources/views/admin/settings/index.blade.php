@@ -2,9 +2,27 @@
 <x-layouts.app :title="$title">
     <x-page-header :title="t('settings.title')" :subtitle="t('settings.subtitle')" />
     <x-card flush>
-        <x-tabs :current="$tab" :items="collect(['organization','financial','loans','insurance','notifications'])->map(fn ($k) => ['key' => $k, 'label' => t('settings.tabs.'.$k)])->all()" />
+        <x-tabs :current="$tab" :items="collect(['organization','modules','financial','loans','insurance','notifications'])->map(fn ($k) => ['key' => $k, 'label' => t('settings.tabs.'.$k)])->all()" />
         <div class="p-5">
-            @if ($tab === 'organization')
+            @if ($tab === 'modules')
+                <form method="POST" action="{{ route('admin.settings.modules') }}" class="max-w-xl">
+                    @csrf @method('PUT')
+                    <p class="mb-4 text-[13px] text-neutral-500">{{ t('settings.modulesHint') }}</p>
+                    <div class="divide-y divide-neutral-100 rounded-xl border border-neutral-200">
+                        @foreach (['opening_shares','shares','community','insurance'] as $m)
+                            <label class="flex cursor-pointer items-center justify-between gap-4 px-4 py-3">
+                                <span>
+                                    <span class="block text-[13.5px] font-medium text-neutral-800">{{ t('settings.modules.'.$m) }}</span>
+                                    <span class="block text-[11.5px] text-neutral-400">{{ t('settings.modules.'.$m.'Desc') }}</span>
+                                </span>
+                                <input type="checkbox" name="module_{{ $m }}" value="1" @checked($features[$m] ?? true)
+                                       class="h-5 w-5 rounded border-neutral-300 text-primary-700 focus:ring-primary-600">
+                            </label>
+                        @endforeach
+                    </div>
+                    <div class="mt-4"><button class="k-btn k-btn-primary">{{ t('common.saveChanges') }}</button></div>
+                </form>
+            @elseif ($tab === 'organization')
                 <form method="POST" action="{{ route('admin.settings.organization') }}" class="grid max-w-2xl gap-4 sm:grid-cols-2">
                     @csrf @method('PUT')
                     <x-field :label="t('settings.organizationName')" name="name" class="sm:col-span-2"><x-input name="name" :value="old('name', $org->name)" /></x-field>

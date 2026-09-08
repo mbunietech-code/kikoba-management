@@ -42,19 +42,22 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::delete('/{member}', 'destroy')->name('destroy')->can('members.delete');
     });
 
-    Route::controller(Admin\ShareController::class)->prefix('shares')->name('shares.')->group(function () {
+    Route::controller(Admin\ShareController::class)->prefix('shares')->name('shares.')->middleware('feature:shares')->group(function () {
         Route::get('/', 'index')->name('index')->can('shares.view');
         Route::post('/', 'store')->name('store')->can('shares.create');
         Route::put('/{share}', 'update')->name('update')->can('shares.create');
         Route::delete('/{share}', 'destroy')->name('destroy')->can('shares.create');
     });
 
-    Route::controller(Admin\OpeningShareController::class)->prefix('opening-shares')->name('opening-shares.')->group(function () {
+    Route::controller(Admin\OpeningShareController::class)->prefix('opening-shares')->name('opening-shares.')->middleware('feature:opening_shares')->group(function () {
         Route::get('/', 'index')->name('index')->can('shares.view');
         Route::post('/', 'store')->name('store')->can('shares.create');
         Route::put('/{share}', 'update')->name('update')->can('shares.create');
         Route::delete('/{share}', 'destroy')->name('destroy')->can('shares.create');
     });
+
+    Route::get('community', [Admin\CommunityController::class, 'index'])->name('community.index')
+        ->middleware('feature:community')->can('members.view');
 
     Route::controller(Admin\SavingsController::class)->prefix('savings')->name('savings.')->group(function () {
         Route::get('/', 'index')->name('index')->can('savings.view');
@@ -100,7 +103,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::post('/{project}/invest', 'invest')->name('invest')->can('projects.manage');
     });
 
-    Route::controller(Admin\InsuranceController::class)->prefix('insurance')->name('insurance.')->group(function () {
+    Route::controller(Admin\InsuranceController::class)->prefix('insurance')->name('insurance.')->middleware('feature:insurance')->group(function () {
         Route::get('/', 'index')->name('index')->can('insurance.view');
         Route::post('/contribute', 'contribute')->name('contribute')->can('insurance.manage');
         Route::post('/claims', 'fileClaim')->name('claims.store')->can('insurance.manage');
@@ -160,6 +163,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::get('/', 'index')->name('index')->can('settings.view');
         Route::put('/organization', 'organization')->name('organization')->can('settings.manage');
         Route::put('/config', 'config')->name('config')->can('settings.manage');
+        Route::put('/modules', 'modules')->name('modules')->can('settings.manage');
     });
 
     Route::get('/audit-logs', [Admin\AuditController::class, 'index'])->name('audit.index')->can('audit.view');

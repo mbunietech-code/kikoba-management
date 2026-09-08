@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Organization;
 use App\Models\Setting;
 use App\Support\Audit;
+use App\Support\Features;
 use Illuminate\Http\Request;
 
 class SettingsController extends Controller
@@ -33,6 +34,20 @@ class SettingsController extends Controller
         $before = $org->only(array_keys($data));
         $org->update($data);
         Audit::log($request, 'UPDATE_ORGANIZATION', 'Organization', $org->id, $before, $data);
+
+        return back()->with('toast', t('settings.saved'));
+    }
+
+    public function modules(Request $request)
+    {
+        $orgId = app('kikoba.org')->id;
+        foreach (array_keys(Features::MODULES) as $key) {
+            Setting::updateOrCreate(
+                ['organization_id' => $orgId, 'key' => "module_{$key}"],
+                ['value' => $request->boolean("module_{$key}") ? '1' : '0', 'updated_by' => $request->user()->id],
+            );
+        }
+        Audit::log($request, 'UPDATE_MODULES', 'Setting', null);
 
         return back()->with('toast', t('settings.saved'));
     }

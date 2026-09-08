@@ -7,16 +7,29 @@ class Nav
     /** @return array<int, array{title:string, items: array<int, array{route:string, label:string, icon:string, can?:string}>}> */
     public static function admin(): array
     {
+        $f = app()->bound('kikoba.features') ? app('kikoba.features') : Features::MODULES;
+
+        $membership = [
+            ['route' => 'admin.members.index', 'label' => 'nav.members', 'icon' => 'users', 'can' => 'members.view'],
+        ];
+        if ($f['opening_shares'] ?? true) {
+            $membership[] = ['route' => 'admin.opening-shares.index', 'label' => 'nav.openingShares', 'icon' => 'sparkles', 'can' => 'shares.view'];
+        }
+        if ($f['shares'] ?? true) {
+            $membership[] = ['route' => 'admin.shares.index', 'label' => 'nav.shares', 'icon' => 'chart-pie', 'can' => 'shares.view'];
+        }
+        if ($f['community'] ?? true) {
+            $membership[] = ['route' => 'admin.community.index', 'label' => 'nav.community', 'icon' => 'user-group', 'can' => 'members.view'];
+        }
+        if ($f['insurance'] ?? true) {
+            $membership[] = ['route' => 'admin.insurance.index', 'label' => 'nav.insurance', 'icon' => 'shield-check', 'can' => 'insurance.view'];
+        }
+
         return [
             ['title' => 'nav.groupsMain', 'items' => [
                 ['route' => 'admin.dashboard', 'label' => 'nav.dashboard', 'icon' => 'squares-2x2'],
             ]],
-            ['title' => 'nav.groupsMembers', 'items' => [
-                ['route' => 'admin.members.index', 'label' => 'nav.members', 'icon' => 'users', 'can' => 'members.view'],
-                ['route' => 'admin.shares.index', 'label' => 'nav.shares', 'icon' => 'chart-pie', 'can' => 'shares.view'],
-                ['route' => 'admin.opening-shares.index', 'label' => 'nav.openingShares', 'icon' => 'sparkles', 'can' => 'shares.view'],
-                ['route' => 'admin.insurance.index', 'label' => 'nav.insurance', 'icon' => 'shield-check', 'can' => 'insurance.view'],
-            ]],
+            ['title' => 'nav.groupsMembers', 'items' => $membership],
             ['title' => 'nav.groupsFinance', 'items' => [
                 ['route' => 'admin.savings.index', 'label' => 'nav.savings', 'icon' => 'banknotes', 'can' => 'savings.view'],
                 ['route' => 'admin.loans.index', 'label' => 'nav.loans', 'icon' => 'credit-card', 'can' => 'loans.view'],
@@ -41,20 +54,30 @@ class Nav
 
     public static function member(): array
     {
+        $f = app()->bound('kikoba.features') ? app('kikoba.features') : Features::MODULES;
+
+        $main = [
+            ['route' => 'member.home', 'label' => 'nav.home', 'icon' => 'home'],
+        ];
+        if ($f['shares'] ?? true) {
+            $main[] = ['route' => 'member.shares', 'label' => 'nav.myShares', 'icon' => 'chart-pie'];
+        }
+        $main[] = ['route' => 'member.savings', 'label' => 'nav.mySavings', 'icon' => 'banknotes'];
+        $main[] = ['route' => 'member.loans', 'label' => 'nav.myLoans', 'icon' => 'credit-card'];
+        $main[] = ['route' => 'member.repayments', 'label' => 'nav.repayments', 'icon' => 'wallet'];
+
+        $finance = [
+            ['route' => 'member.projects', 'label' => 'nav.myProjects', 'icon' => 'briefcase'],
+        ];
+        if ($f['insurance'] ?? true) {
+            $finance[] = ['route' => 'member.insurance', 'label' => 'nav.myInsurance', 'icon' => 'shield-check'];
+        }
+        $finance[] = ['route' => 'member.transactions', 'label' => 'nav.transactions', 'icon' => 'arrows-right-left'];
+        $finance[] = ['route' => 'member.statements', 'label' => 'nav.statements', 'icon' => 'document-text'];
+
         return [
-            ['title' => 'nav.groupsMain', 'items' => [
-                ['route' => 'member.home', 'label' => 'nav.home', 'icon' => 'home'],
-                ['route' => 'member.shares', 'label' => 'nav.myShares', 'icon' => 'chart-pie'],
-                ['route' => 'member.savings', 'label' => 'nav.mySavings', 'icon' => 'banknotes'],
-                ['route' => 'member.loans', 'label' => 'nav.myLoans', 'icon' => 'credit-card'],
-                ['route' => 'member.repayments', 'label' => 'nav.repayments', 'icon' => 'wallet'],
-            ]],
-            ['title' => 'nav.groupsFinance', 'items' => [
-                ['route' => 'member.projects', 'label' => 'nav.myProjects', 'icon' => 'briefcase'],
-                ['route' => 'member.insurance', 'label' => 'nav.myInsurance', 'icon' => 'shield-check'],
-                ['route' => 'member.transactions', 'label' => 'nav.transactions', 'icon' => 'arrows-right-left'],
-                ['route' => 'member.statements', 'label' => 'nav.statements', 'icon' => 'document-text'],
-            ]],
+            ['title' => 'nav.groupsMain', 'items' => $main],
+            ['title' => 'nav.groupsFinance', 'items' => $finance],
             ['title' => 'nav.groupsAdmin', 'items' => [
                 ['route' => 'member.notifications', 'label' => 'nav.notifications', 'icon' => 'bell'],
                 ['route' => 'member.profile', 'label' => 'common.profile', 'icon' => 'user'],
