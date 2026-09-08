@@ -139,6 +139,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     });
 
     Route::get('/reports', [Admin\ReportController::class, 'index'])->name('reports.index')->can('reports.view');
+    Route::get('/reports/{type}', [Admin\ReportController::class, 'download'])->name('reports.download')->can('reports.view');
 
     Route::controller(Admin\NotificationController::class)->prefix('notifications')->name('notifications.')->group(function () {
         Route::get('/', 'index')->name('index');
