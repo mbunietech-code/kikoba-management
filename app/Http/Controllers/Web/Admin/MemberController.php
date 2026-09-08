@@ -54,7 +54,7 @@ class MemberController extends Controller
         $data = $this->validated($request);
         $orgId = app('kikoba.org')->id;
         $data['organization_id'] = $orgId;
-        $data['member_number'] = 'MBR-'.str_pad((string) (Member::where('organization_id', $orgId)->count() + 1), 6, '0', STR_PAD_LEFT);
+        $data['member_number'] = $this->nextMemberNumber($orgId);
         $data['registration_date'] = now()->toDateString();
         $data['avatar_color'] = '#'.substr(md5($data['full_name']), 0, 6);
 
@@ -94,6 +94,23 @@ class MemberController extends Controller
         Audit::log($request, 'DELETE_MEMBER', 'Member', $member->id);
 
         return redirect()->route('admin.members.index')->with('toast', t('common.deleted'));
+    }
+
+    /**
+     * Next MBR-000000 number. Derived from the highest existing suffix
+     * (soft-deleted members included) so archived rows don't cause a
+     * unique-constraint collision.
+     */
+    private function nextMemberNumber(string $orgId): string
+    {
+        $max = Member::withTrashed()
+            ->where('organization_id', $orgId)
+            ->where('member_number', 'like', 'MBR-%')
+            ->get(['member_number'])
+            ->map(fn ($m) => (int) substr($m->member_number, 4))
+            ->max() ?? 0;
+
+        return 'MBR-'.str_pad((string) ($max + 1), 6, '0', STR_PAD_LEFT);
     }
 
     private function validated(Request $request): array

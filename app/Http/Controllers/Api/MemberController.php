@@ -67,12 +67,17 @@ class MemberController extends ApiController
         ]);
 
         $orgId = $this->orgId($request);
-        $next = Member::where('organization_id', $orgId)->count() + 1;
+        $max = Member::withTrashed()
+            ->where('organization_id', $orgId)
+            ->where('member_number', 'like', 'MBR-%')
+            ->get(['member_number'])
+            ->map(fn ($m) => (int) substr($m->member_number, 4))
+            ->max() ?? 0;
 
         $member = Member::create([
             ...$data,
             'organization_id' => $orgId,
-            'member_number' => 'MBR-'.str_pad((string) $next, 6, '0', STR_PAD_LEFT),
+            'member_number' => 'MBR-'.str_pad((string) ($max + 1), 6, '0', STR_PAD_LEFT),
             'registration_date' => now()->toDateString(),
             'status' => $data['status'] ?? 'pending',
             'avatar_color' => '#'.substr(md5($data['full_name']), 0, 6),
