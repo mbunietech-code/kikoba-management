@@ -87,7 +87,7 @@ return [
         'members' => 'Members',
         'shares' => 'Shares',
         'openingShares' => 'Opening shares',
-        'community' => 'Community',
+        'community' => 'Jamii/Dharura',
         'savings' => 'Savings',
         'loans' => 'Loans',
         'loanProducts' => 'Loan products',

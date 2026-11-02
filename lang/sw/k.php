@@ -87,7 +87,7 @@ return [
         'members' => 'Wanachama',
         'shares' => 'Hisa',
         'openingShares' => 'Hisa anzia',
-        'community' => 'Jamii',
+        'community' => 'Jamii/Dharura',
         'savings' => 'Akiba',
         'loans' => 'Mikopo',
         'loanProducts' => 'Aina za mikopo',
