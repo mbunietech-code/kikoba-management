@@ -1,6 +1,7 @@
 @php $title = t('community.title'); @endphp
 <x-layouts.app :title="$title">
     <x-page-header :title="t('community.title')" :subtitle="t('community.subtitle')" />
+    @include('admin.community._tabs', ['current' => 'groups'])
 
     <div class="grid gap-4 sm:grid-cols-3">
         <x-stat :label="t('community.groups')" :value="$groups->where('name', '!=', '__none__')->count()" />
@@ -25,8 +26,8 @@
                             <span class="ml-2 text-[11px] text-neutral-400">{{ $g['active'] }}/{{ $g['members'] }} {{ strtolower(t('members.status.active')) }}</span>
                         </td>
                         <td class="px-4 py-3 text-right">{{ num($g['members']) }}</td>
-                        <td class="px-4 py-3 text-right">{{ money($g['shares'], true) }}</td>
-                        <td class="px-4 py-3 text-right">{{ money($g['savings'], true) }}</td>
+                        <td class="whitespace-nowrap px-4 py-3 text-right tabular-nums">{{ money($g['shares']) }}</td>
+                        <td class="whitespace-nowrap px-4 py-3 text-right tabular-nums">{{ money($g['savings']) }}</td>
                         <td class="px-4 py-3 text-right">
                             <a class="text-[12px] font-medium text-primary-700 hover:underline"
                                href="{{ route('admin.members.index', ['group' => $g['name'] === '__none__' ? '__none__' : $g['name']]) }}">

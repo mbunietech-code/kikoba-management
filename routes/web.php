@@ -61,8 +61,12 @@ Route::middleware(['auth', EnsureStaff::class])->prefix('admin')->name('admin.')
         Route::delete('/{share}', 'destroy')->name('destroy')->can('shares.create');
     });
 
-    Route::get('community', [Admin\CommunityController::class, 'index'])->name('community.index')
-        ->middleware('feature:community')->can('members.view');
+    Route::controller(Admin\CommunityController::class)->prefix('community')->name('community.')->middleware('feature:community')->group(function () {
+        Route::get('/', 'index')->name('index')->can('members.view');
+        Route::post('/contributions', 'store')->name('contributions.store')->can('savings.deposit');
+        Route::post('/contributions/{contribution}/reverse', 'reverse')->name('contributions.reverse')->can('savings.withdraw');
+        Route::put('/rates', 'rates')->name('rates')->can('settings.manage');
+    });
 
     Route::controller(Admin\SavingsController::class)->prefix('savings')->name('savings.')->group(function () {
         Route::get('/', 'index')->name('index')->can('savings.view');

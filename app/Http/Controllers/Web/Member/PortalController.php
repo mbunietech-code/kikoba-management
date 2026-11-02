@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web\Member;
 
 use App\Http\Controllers\Controller;
+use App\Models\CommunityContribution;
 use App\Models\Loan;
 use App\Models\LoanApplication;
 use App\Models\LoanProduct;
@@ -12,6 +13,7 @@ use App\Models\Member;
 use App\Models\Notification;
 use App\Models\ProfitAllocation;
 use App\Models\Project;
+use App\Services\CommunityContributionService;
 use App\Services\LoanService;
 use App\Support\Audit;
 use Illuminate\Http\Request;
@@ -63,8 +65,17 @@ class PortalController extends Controller
                 ->whereIn('status', ['pending', 'partial', 'overdue'])->orderBy('due_date')->first()
             : null;
         $savingsTrend = $this->savingsTrend($member);
+        $community = null;
+        if (app('kikoba.features')['community'] ?? true) {
+            $thisMonth = CommunityContribution::where('member_id', $member->id)->counted()->where('period', now()->format('Y-m'))
+                ->selectRaw('fund, sum(amount) as total')->groupBy('fund')->pluck('total', 'fund');
+            $community = [
+                'rates' => app(CommunityContributionService::class)->rates($member->organization_id),
+                'paid' => ['jamii' => (int) ($thisMonth['jamii'] ?? 0), 'dharura' => (int) ($thisMonth['dharura'] ?? 0)],
+            ];
+        }
 
-        return view('member.home', compact('member', 'pos', 'txns', 'nextRepay', 'savingsTrend'));
+        return view('member.home', compact('member', 'pos', 'txns', 'nextRepay', 'savingsTrend', 'community'));
     }
 
     /**
@@ -245,6 +256,11 @@ class PortalController extends Controller
         }
         $repayments = LoanRepayment::where('member_id', $member->id)->with('loan:id,loan_number')
             ->when($from, fn ($q) => $q->where('payment_date', '>=', $from->toDateString()))->get();
+        $community = CommunityContribution::where('member_id', $member->id)->counted()
+            ->when($from, fn ($q) => $q->where('paid_on', '>=', $from->toDateString()))->get();
+        foreach ($community as $c) {
+            $rows->push([$c->paid_on, t('community.title'), t('community.'.$c->fund).' '.$c->period, $c->reference, $c->amount, '']);
+        }
         foreach ($repayments as $r) {
             $rows->push([$r->payment_date, t('nav.loans'), t('loans.recordRepayment').' '.$r->loan?->loan_number, $r->reference, $r->total_paid, '']);
         }

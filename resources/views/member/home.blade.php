@@ -30,6 +30,23 @@
                     <x-btn variant="outlined" :href="route('member.loans.show', $pos['activeLoan'])" size="sm" class="mt-3 w-full">{{ t('member.viewLoan') }}</x-btn>
                 </x-card>
             @endif
+            @if ($community)
+                <x-card>
+                    <p class="text-[13px] font-medium text-neutral-500">{{ t('member.communityThisMonth', ['month' => now()->translatedFormat('F')]) }}</p>
+                    <dl class="mt-2 space-y-1.5 text-[13.5px]">
+                        @foreach (['jamii', 'dharura'] as $fund)
+                            @php $done = $community['paid'][$fund] >= $community['rates'][$fund]; @endphp
+                            <div class="flex items-center justify-between gap-2">
+                                <dt class="text-neutral-700">{{ t('community.'.$fund) }}</dt>
+                                <dd class="flex items-center gap-2">
+                                    <span class="tabular-nums text-neutral-900">{{ money($community['paid'][$fund]) }}</span>
+                                    <x-badge :tone="$done ? 'success' : 'warning'">{{ $done ? t('community.state.paid') : t('member.dueAmount', ['amount' => num($community['rates'][$fund] - $community['paid'][$fund])]) }}</x-badge>
+                                </dd>
+                            </div>
+                        @endforeach
+                    </dl>
+                </x-card>
+            @endif
             <x-card>
                 <p class="text-[13px] font-medium text-neutral-500">{{ t('member.insuranceStatus') }}</p>
                 <div class="mt-1.5">
