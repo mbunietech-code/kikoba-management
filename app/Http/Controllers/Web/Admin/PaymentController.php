@@ -18,7 +18,9 @@ class PaymentController extends Controller
         $payments = Payment::where('organization_id', $orgId)->with('member')
             ->when($request->status, fn ($q, $s) => $q->where('status', $s))
             ->when($request->method, fn ($q, $m) => $q->where('payment_method', $m))
-            ->when($request->q, fn ($q, $s) => $q->where('internal_reference', 'like', "%$s%")->orWhere('external_reference', 'like', "%$s%"))
+            ->when($request->q, fn ($q, $s) => $q->where(fn ($w) => $w->where('internal_reference', 'like', "%$s%")
+                ->orWhere('external_reference', 'like', "%$s%")
+                ->orWhereHas('member', fn ($m) => $m->where('full_name', 'like', "%$s%"))))
             ->latest('paid_at')->paginate(15)->withQueryString();
 
         $summary = [

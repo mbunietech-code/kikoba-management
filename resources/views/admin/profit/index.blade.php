@@ -9,15 +9,15 @@
                 <th class="px-4 py-3">{{ t('common.status') }}</th><th></th></tr></thead>
             <tbody class="divide-y divide-neutral-100">
                 @forelse ($distributions as $d)
-                    <tr class="cursor-pointer hover:bg-neutral-50" onclick="window.location='{{ route('admin.profit.show', $d) }}'">
-                        <td class="px-4 py-3 text-[13px]">{{ fdate($d->period_start, 'short') }} – {{ fdate($d->period_end, 'short') }}</td>
+                    <tr class="hover:bg-neutral-50">
+                        <td class="px-4 py-3 text-[13px]"><a href="{{ route('admin.profit.show', $d) }}" class="font-medium text-primary-700 hover:underline">{{ fdate($d->period_start) }} – {{ fdate($d->period_end) }}</a></td>
                         <td class="px-4 py-3 text-right">{{ money($d->total_profit) }}</td>
                         <td class="px-4 py-3 text-right">{{ money($d->reserved_amount) }}</td>
                         <td class="px-4 py-3 text-right font-medium">{{ money($d->distributable_profit) }}</td>
                         <td class="px-4 py-3"><x-status :status="$d->status" :label="t('profit.status.'.$d->status)" /></td>
-                        <td class="px-4 py-3 text-right">@if (! in_array($d->status, ['approved','distributed']))<x-row-actions :delete="route('admin.profit.destroy', $d)" />@endif</td>
+                        <td class="px-4 py-3 text-right">@can('profit.manage')@if (! in_array($d->status, ['approved','distributed']))<x-row-actions :delete="route('admin.profit.destroy', $d)" />@endif @endcan</td>
                     </tr>
-                @empty<tr><td colspan="6"><x-empty :title="t('common.noData')" /></td></tr>@endforelse
+                @empty<tr><td colspan="6"><x-empty :title="t('profit.emptyTitle')" :hint="t('profit.emptyHint')" icon="arrow-trending-up" /></td></tr>@endforelse
             </tbody>
         </table>
     </x-card>

@@ -17,7 +17,7 @@
                     @foreach ([
                         [t('products.minAmount'), money($p->minimum_amount, true)],
                         [t('products.maxAmount'), money($p->maximum_amount, true)],
-                        [t('products.interestRate'), pct($p->interest_rate).' · '.t('loans.method.'.$p->interest_method)],
+                        [t('products.interestRatePerYear'), pct($p->interest_rate).' · '.t('loans.method.'.$p->interest_method)],
                         [t('loans.period'), $p->repayment_period.' '.t('loans.months')],
                         [t('products.processingFee'), pct($p->processing_fee)],
                         [t('products.minSavings'), money($p->minimum_savings, true)],

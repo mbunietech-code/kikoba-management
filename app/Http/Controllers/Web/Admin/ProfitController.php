@@ -27,7 +27,7 @@ class ProfitController extends Controller
     public function destroy(Request $request, ProfitDistribution $distribution)
     {
         if (in_array($distribution->status, ['approved', 'distributed'])) {
-            return back()->with('toast', 'Distributed — cannot delete');
+            return back()->with('toast', t('profit.cannotDelete'))->with('toast_tone', 'error');
         }
         $distribution->allocations()->delete();
         $distribution->delete();

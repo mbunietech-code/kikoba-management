@@ -9,6 +9,7 @@ use App\Models\JournalLine;
 use App\Services\AccountingService;
 use App\Support\Audit;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class AccountingController extends Controller
 {
@@ -37,8 +38,8 @@ class AccountingController extends Controller
     public function storeAccount(Request $request)
     {
         $data = $request->validate([
-            'account_code' => ['required', 'string', 'max:20'],
-            'name' => ['required', 'string'],
+            'account_code' => ['required', 'string', 'max:20', Rule::unique('accounts')->where('organization_id', app('kikoba.org')->id)],
+            'name' => ['required', 'string', 'max:120'],
             'account_type' => ['required', 'in:asset,liability,equity,revenue,expense'],
         ]);
         Account::create([...$data, 'organization_id' => app('kikoba.org')->id, 'balance' => 0]);
@@ -62,7 +63,7 @@ class AccountingController extends Controller
     public function destroyAccount(Request $request, Account $account)
     {
         if (JournalLine::where('account_id', $account->id)->exists()) {
-            return back()->with('toast', 'Account has entries');
+            return back()->with('toast', t('accounting.accountHasEntries'))->with('toast_tone', 'error');
         }
         $account->delete();
         Audit::log($request, 'DELETE_ACCOUNT', 'Account', $account->id);

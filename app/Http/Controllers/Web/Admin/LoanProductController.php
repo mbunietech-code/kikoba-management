@@ -50,7 +50,7 @@ class LoanProductController extends Controller
         if ($product->loans()->exists()) {
             $product->update(['status' => 'inactive']);
 
-            return back()->with('toast', 'Has loans — deactivated');
+            return back()->with('toast', t('products.deactivatedInstead'));
         }
         $product->delete();
         Audit::log($request, 'DELETE_PRODUCT', 'LoanProduct', $product->id);
@@ -64,14 +64,14 @@ class LoanProductController extends Controller
             'name' => ['required', 'string', 'max:120'],
             'description' => ['nullable', 'string'],
             'minimum_amount' => ['required', 'integer', 'min:0'],
-            'maximum_amount' => ['required', 'integer', 'min:0'],
-            'interest_rate' => ['required', 'numeric', 'min:0'],
+            'maximum_amount' => ['required', 'integer', 'min:0', 'gte:minimum_amount'],
+            'interest_rate' => ['required', 'numeric', 'min:0', 'max:100'],
             'interest_method' => ['required', 'in:flat,reducing'],
-            'repayment_period' => ['required', 'integer', 'min:1'],
+            'repayment_period' => ['required', 'integer', 'min:1', 'max:120'],
             'repayment_frequency' => ['required', 'in:weekly,biweekly,monthly,quarterly'],
-            'processing_fee' => ['nullable', 'numeric', 'min:0'],
-            'insurance_fee' => ['nullable', 'numeric', 'min:0'],
-            'penalty_rate' => ['nullable', 'numeric', 'min:0'],
+            'processing_fee' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'insurance_fee' => ['nullable', 'numeric', 'min:0', 'max:100'],
+            'penalty_rate' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'minimum_savings' => ['nullable', 'integer', 'min:0'],
             'minimum_shares' => ['nullable', 'integer', 'min:0'],
             'required_guarantors' => ['nullable', 'integer', 'min:0'],
