@@ -2,8 +2,6 @@
 
 @section('content')
     <div x-data="{ showPassword: false, submitting: false }">
-        <div class="auth-lock" aria-hidden="true"><x-heroicon-o-lock-closed /></div>
-        <p class="auth-eyebrow">{{ t('auth.memberAccess') }}</p>
         <h1 class="auth-title">{{ t('auth.welcomeBack') }}</h1>
         <p class="auth-subtitle">{{ t('auth.signInSubtitle') }}</p>
 
@@ -31,11 +29,9 @@
 
             <button type="submit" class="auth-submit" x-bind:disabled="submitting" x-bind:aria-busy="submitting">
                 <span x-text="submitting ? @js(t('auth.signingIn')) : @js(t('auth.signIn'))">{{ t('auth.signIn') }}</span>
-                <x-heroicon-o-arrow-right aria-hidden="true" />
             </button>
         </form>
 
         <p class="auth-help">{{ t('auth.needHelp') }} <span>{{ t('auth.contactAdmin') }}</span></p>
-        <div class="auth-security"><x-heroicon-o-shield-check aria-hidden="true" /><span>{{ t('auth.keepPrivate') }}</span></div>
     </div>
 @endsection

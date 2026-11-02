@@ -126,6 +126,9 @@ return [
     ],
     'auth' => [
         'throttled' => 'Umejaribu kuingia mara nyingi. Tafadhali jaribu tena baada ya sekunde :seconds.',
+        'pointBalances' => 'Angalia salio la akiba na hisa zako wakati wowote',
+        'pointLoans' => 'Jua deni lako na tarehe ya rejesho linalofuata',
+        'pointStatements' => 'Pakua taarifa za kila mchango wako',
         'memberAccess' => 'SEHEMU YA WANACHAMA',
         'welcomeBack' => 'Karibu tena.',
         'signInSubtitle' => 'Ingia kufikia akaunti yako ya chama.',

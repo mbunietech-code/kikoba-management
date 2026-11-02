@@ -126,6 +126,9 @@ return [
     ],
     'auth' => [
         'throttled' => 'Too many sign-in attempts. Please try again in :seconds seconds.',
+        'pointBalances' => 'See your savings and share balances at any time',
+        'pointLoans' => 'Know what you owe and when the next repayment is due',
+        'pointStatements' => 'Download statements of every contribution',
         'memberAccess' => 'MEMBER ACCESS',
         'welcomeBack' => 'Welcome back.',
         'signInSubtitle' => 'Sign in to access your group account.',
