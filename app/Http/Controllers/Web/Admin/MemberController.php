@@ -68,7 +68,7 @@ class MemberController extends Controller
         $data = $request->validated();
         $orgId = $request->user()->organization_id;
         $data['organization_id'] = $orgId;
-        $data['member_number'] = $this->nextMemberNumber($orgId);
+        $data['member_number'] = Member::nextNumber();
         $data['registration_date'] = $data['registration_date'] ?? now()->toDateString();
         $data['avatar_color'] = '#'.substr(md5($data['full_name']), 0, 6);
 
@@ -135,23 +135,6 @@ class MemberController extends Controller
 
         return back()->with('login_results', $results)
             ->with('toast', t('memberLogin.bulkDone', ['count' => count($results)]));
-    }
-
-    /**
-     * Next MBR-000000 number. Derived from the highest existing suffix
-     * (soft-deleted members included) so archived rows don't cause a
-     * unique-constraint collision.
-     */
-    private function nextMemberNumber(string $orgId): string
-    {
-        $max = Member::withTrashed()
-            ->where('organization_id', $orgId)
-            ->where('member_number', 'like', 'MBR-%')
-            ->get(['member_number'])
-            ->map(fn ($m) => (int) substr($m->member_number, 4))
-            ->max() ?? 0;
-
-        return 'MBR-'.str_pad((string) ($max + 1), 6, '0', STR_PAD_LEFT);
     }
 
     public function photo(Request $request, Member $member): StreamedResponse

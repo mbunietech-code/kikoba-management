@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Http\Resources\GenericResource;
 use App\Models\Member;
 use App\Support\ApiResponse;
 use App\Support\Audit;
 use Illuminate\Http\Request;
-use Illuminate\Support\Str;
 
 class MemberController extends ApiController
 {
@@ -66,18 +66,10 @@ class MemberController extends ApiController
             'status' => ['nullable', 'in:pending,active,suspended,inactive'],
         ]);
 
-        $orgId = $this->orgId($request);
-        $max = Member::withTrashed()
-            ->where('organization_id', $orgId)
-            ->where('member_number', 'like', 'MBR-%')
-            ->get(['member_number'])
-            ->map(fn ($m) => (int) substr($m->member_number, 4))
-            ->max() ?? 0;
-
         $member = Member::create([
             ...$data,
-            'organization_id' => $orgId,
-            'member_number' => 'MBR-'.str_pad((string) ($max + 1), 6, '0', STR_PAD_LEFT),
+            'organization_id' => $this->orgId($request),
+            'member_number' => Member::nextNumber(),
             'registration_date' => now()->toDateString(),
             'status' => $data['status'] ?? 'pending',
             'avatar_color' => '#'.substr(md5($data['full_name']), 0, 6),
@@ -85,7 +77,7 @@ class MemberController extends ApiController
 
         Audit::log($request, 'CREATE_MEMBER', 'Member', $member->id, null, ['status' => $member->status]);
 
-        return ApiResponse::created((new \App\Http\Resources\GenericResource($member))->resolve(), 'Member created');
+        return ApiResponse::created((new GenericResource($member))->resolve(), 'Member created');
     }
 
     public function update(Request $request, string $id)

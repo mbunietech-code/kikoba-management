@@ -68,6 +68,33 @@ class MemberRegistrationTest extends TestCase
         $this->assertSame(now()->toDateString(), $member->registration_date->toDateString());
     }
 
+    public function test_new_members_are_numbered_ug_001_upwards(): void
+    {
+        Member::factory()->create(['organization_id' => $this->organization->id, 'member_number' => 'MBR-000009']);
+        $archived = Member::factory()->create(['organization_id' => $this->organization->id, 'member_number' => 'UG-002']);
+        $archived->delete();
+
+        $this->post(route('admin.members.store'), ['full_name' => 'Asha Juma', 'phone' => '0712345678', 'status' => 'active'])->assertSessionHasNoErrors();
+        $this->post(route('admin.members.store'), ['full_name' => 'Juma Ali', 'phone' => '0712345679', 'status' => 'active'])->assertSessionHasNoErrors();
+
+        $this->assertSame(['UG-003', 'UG-004'], Member::whereIn('full_name', ['Asha Juma', 'Juma Ali'])->orderBy('member_number')->pluck('member_number')->all());
+    }
+
+    public function test_existing_members_are_renumbered_in_order_and_archived_ones_are_left_alone(): void
+    {
+        $expected = ['MBR-000008' => 'UG-003', 'MBR-000004' => 'UG-001', 'MBR-000006' => 'UG-002'];
+        $ids = collect($expected)->mapWithKeys(fn ($new, $old) => [$old => Member::factory()->create(['organization_id' => $this->organization->id, 'member_number' => $old])->id]);
+        $archived = Member::factory()->create(['organization_id' => $this->organization->id, 'member_number' => 'MBR-000001']);
+        $archived->delete();
+
+        (require database_path('migrations/2026_11_02_160616_renumber_members_to_ug_format.php'))->up();
+
+        foreach ($expected as $old => $new) {
+            $this->assertSame($new, Member::find($ids[$old])->member_number, "$old becomes $new");
+        }
+        $this->assertSame('MBR-000001', Member::withTrashed()->find($archived->id)->member_number);
+    }
+
     public function test_invalid_identity_dates_and_incomplete_kin_are_rejected(): void
     {
         $this->post(route('admin.members.store'), [...$this->details(),
