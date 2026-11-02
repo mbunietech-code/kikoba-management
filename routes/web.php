@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Web\AccountController;
 use App\Http\Controllers\Web\Admin;
 use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\Member;
@@ -25,13 +26,15 @@ Route::middleware(['guest', AuthResponseHeaders::class])->group(function () {
     Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:30,1,web-login');
     Route::match(['get', 'post'], '/verify-otp', fn () => redirect()->route('login'))->name('verify-otp');
     Route::get('/forgot-password', [LoginController::class, 'forgot'])->name('forgot');
-    Route::post('/forgot-password', fn () => back()->with('status', 'If the email exists, a reset link has been sent.'));
 });
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
+Route::put('/account/password', [AccountController::class, 'password'])->middleware('auth')->name('account.password');
 
 /* -------------------------------- admin -------------------------------- */
 Route::middleware(['auth', EnsureStaff::class])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/account', [AccountController::class, 'show'])->name('account');
+    Route::put('/account', [AccountController::class, 'update'])->name('account.update');
 
     Route::controller(Admin\MemberController::class)->prefix('members')->name('members.')->group(function () {
         Route::get('/', 'index')->name('index')->can('members.view');

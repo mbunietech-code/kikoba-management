@@ -32,6 +32,6 @@
             </button>
         </form>
 
-        <p class="auth-help">{{ t('auth.needHelp') }} <span>{{ t('auth.contactAdmin') }}</span></p>
+        <p class="auth-help">{{ t('auth.needHelp') }} <a href="{{ route('forgot') }}">{{ t('auth.forgotTitle') }}</a></p>
     </div>
 @endsection

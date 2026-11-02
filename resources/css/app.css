@@ -148,7 +148,7 @@
 .auth-submit:disabled { opacity: .7; cursor: wait; }
 .auth-page :is(button, a, input):focus-visible { outline: 2px solid var(--color-primary-600); outline-offset: 2px; }
 .auth-help { margin-top: 20px; font-size: 13px; line-height: 1.6; color: var(--color-neutral-500); }
-.auth-help span { color: var(--color-neutral-800); font-weight: 600; }
+.auth-help a { color: var(--color-primary-800); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
 .auth-footer { display: flex; justify-content: space-between; gap: 12px; color: var(--color-neutral-400); font-size: 12px; }
 @media (max-width: 1023px) { .auth-shell { grid-template-columns: minmax(0, 38%) minmax(0, 1fr); } .auth-brand { padding: 32px 28px; } .auth-story h2 { font-size: 24px; } .auth-main { padding: 24px; } }
 @media (max-width: 767px) {

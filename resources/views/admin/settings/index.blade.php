@@ -2,7 +2,7 @@
 <x-layouts.app :title="$title">
     <x-page-header :title="t('settings.title')" :subtitle="t('settings.subtitle')" />
     <x-card flush>
-        <x-tabs :current="$tab" :items="collect(['organization','modules','financial','loans','insurance','notifications'])->map(fn ($k) => ['key' => $k, 'label' => t('settings.tabs.'.$k)])->all()" />
+        <x-tabs :current="$tab" :items="collect(['organization','modules','financial'])->map(fn ($k) => ['key' => $k, 'label' => t('settings.tabs.'.$k)])->all()" />
         <div class="p-5">
             @if ($tab === 'modules')
                 <form method="POST" action="{{ route('admin.settings.modules') }}" class="max-w-xl">
@@ -42,18 +42,14 @@
             @else
                 <form method="POST" action="{{ route('admin.settings.config') }}" class="grid max-w-2xl gap-4 sm:grid-cols-2">
                     @csrf @method('PUT')
-                    @php
-                        $fields = [
-                            'financial' => [['share_price', t('settings.sharePrice')], ['minimum_shares', t('settings.minShares')], ['minimum_savings', t('settings.minSavings')], ['reserve_rate', t('settings.reserveRate')]],
-                            'loans' => [['loan_interest_rate', t('settings.loanInterestRate')], ['penalty_rate', t('settings.penaltyRate')]],
-                            'insurance' => [['insurance_contribution', t('settings.insuranceContribution')]],
-                            'notifications' => [['sms_gateway', t('settings.smsGateway')], ['email_provider', t('settings.emailProvider')]],
-                        ][$tab] ?? [];
-                    @endphp
-                    @foreach ($fields as $f)
-                        <x-field :label="$f[1]"><x-input name="{{ $f[0] }}" :value="$config[$f[0]] ?? ''" /></x-field>
-                    @endforeach
-                    <div class="sm:col-span-2"><button class="k-btn k-btn-primary">{{ t('common.saveChanges') }}</button></div>
+                    <x-field :label="t('settings.sharePrice').' ('.app('kikoba.currency').')'" :hint="t('settings.sharePriceHint')" name="share_price">
+                        <x-input type="number" min="1" step="1" name="share_price" required :value="old('share_price', $config['share_price'] ?? '')" />
+                    </x-field>
+                    <p class="text-[13px] leading-relaxed text-neutral-500 sm:col-span-2">
+                        {{ t('settings.loanTermsLiveOnProducts') }}
+                        @can('products.view')<a href="{{ route('admin.products.index') }}" class="font-medium text-primary-700 underline underline-offset-2">{{ t('nav.loanProducts') }}</a>@endcan
+                    </p>
+                    @can('settings.manage')<div class="sm:col-span-2"><button class="k-btn k-btn-primary">{{ t('common.saveChanges') }}</button></div>@endcan
                 </form>
             @endif
         </div>

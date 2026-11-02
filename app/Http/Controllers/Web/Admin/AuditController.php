@@ -13,7 +13,9 @@ class AuditController extends Controller
         $orgId = app('kikoba.org')->id;
         $logs = AuditLog::where('organization_id', $orgId)->with('user')
             ->when($request->action, fn ($q, $a) => $q->where('action', $a))
-            ->when($request->q, fn ($q, $s) => $q->where('entity', 'like', "%$s%")->orWhere('entity_id', 'like', "%$s%"))
+            ->when($request->q, fn ($q, $s) => $q->where(fn ($w) => $w->where('entity', 'like', "%$s%")
+                ->orWhere('entity_id', 'like', "%$s%")
+                ->orWhereHas('user', fn ($u) => $u->where('name', 'like', "%$s%"))))
             ->latest('created_at')->paginate(20)->withQueryString();
         $actions = AuditLog::where('organization_id', $orgId)->distinct()->pluck('action');
 

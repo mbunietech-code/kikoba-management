@@ -13,7 +13,7 @@ class SettingsController extends Controller
 {
     public function index(Request $request)
     {
-        $tab = $request->get('tab', 'organization');
+        $tab = in_array($request->get('tab'), ['organization', 'modules', 'financial'], true) ? $request->get('tab') : 'organization';
         $org = app('kikoba.org');
         $config = Setting::where('organization_id', $org->id)->pluck('value', 'key');
 
@@ -55,10 +55,14 @@ class SettingsController extends Controller
     public function config(Request $request)
     {
         $orgId = app('kikoba.org')->id;
-        foreach ($request->except('_token', '_method') as $key => $value) {
+        // Only settings the system actually reads; anything else posted is ignored.
+        $data = $request->validate([
+            'share_price' => ['required', 'integer', 'min:1'],
+        ]);
+        foreach ($data as $key => $value) {
             Setting::updateOrCreate(
                 ['organization_id' => $orgId, 'key' => $key],
-                ['value' => is_scalar($value) ? (string) $value : json_encode($value), 'updated_by' => $request->user()->id],
+                ['value' => (string) $value, 'updated_by' => $request->user()->id],
             );
         }
         Audit::log($request, 'UPDATE_SETTINGS', 'Setting', null);

@@ -56,7 +56,7 @@
                             <p class="text-[13px] font-semibold text-neutral-900">{{ $currentUser?->name }}</p>
                             <p class="text-[11px] text-neutral-400">{{ t('users.roles.'.($currentUser?->primaryRole() ?? 'member')) }}</p>
                         </div>
-                        <a href="{{ $isStaff ? route('admin.settings.index') : route('member.profile') }}" class="block px-3 py-2 text-[13px] text-neutral-700 hover:bg-neutral-50">{{ t('common.profile') }}</a>
+                        <a href="{{ $isStaff ? route('admin.account') : route('member.profile') }}" class="block px-3 py-2 text-[13px] text-neutral-700 hover:bg-neutral-50">{{ t('common.profile') }}</a>
                         <form method="POST" action="{{ route('logout') }}">@csrf
                             <button class="block w-full px-3 py-2 text-left text-[13px] text-red-600 hover:bg-red-50">{{ t('common.logout') }}</button>
                         </form>
