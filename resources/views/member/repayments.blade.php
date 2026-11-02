@@ -6,13 +6,13 @@
 <x-layouts.app :title="$title">
     <x-page-header :title="t('nav.repayments')" :subtitle="t('loans.repaymentHistory')" />
     <div class="grid gap-4 sm:grid-cols-2">
-        <x-stat tone="tertiary" :label="t('loans.repaymentHistory')" :value="money($paid, true)" />
-        <x-stat tone="neutral" :label="t('dashboard.upcomingRepayments')" :value="money($due, true)" />
+        <x-stat tone="tertiary" :label="t('loans.repaymentHistory')" :value="money($paid)" />
+        <x-stat tone="neutral" :label="t('dashboard.upcomingRepayments')" :value="money($due)" />
     </div>
     <x-card class="mt-4" flush>
         <x-card-header :title="t('dashboard.upcomingRepayments')" class="p-4" />
         <x-mini-table :head="[t('loans.loanNumber'), t('loans.installment'), t('loans.dueDate'), t('loans.amountDue'), t('common.status')]" :align="['','','','right','']"
-            :rows="$upcoming->map(fn ($r) => [$r->loan?->loan_number, '#'.$r->installment_number, fdate($r->due_date), money($r->total_due - $r->amount_paid), ucfirst($r->status)])" />
+            :rows="$upcoming->map(fn ($r) => [$r->loan?->loan_number, '#'.$r->installment_number, fdate($r->due_date), money($r->total_due - $r->amount_paid), t('loans.scheduleStatus.'.$r->status)])" />
     </x-card>
     <x-card class="mt-4" flush>
         <x-card-header :title="t('loans.repaymentHistory')" class="p-4" />

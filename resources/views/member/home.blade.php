@@ -3,30 +3,31 @@
     <x-page-header :title="t('member.greeting', ['name' => $first])" :subtitle="t('member.myPosition')" />
 
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat :label="t('member.shareValue')" :value="money($pos['shareValue'], true)" :hint="$pos['shareQty'].' '.strtolower(t('shares.quantity'))" />
-        <x-stat tone="secondary" :label="t('member.savingsBalance')" :value="money($pos['savingsBalance'], true)" />
-        <x-stat tone="neutral" :label="t('member.outstanding')" :value="money($pos['loanOutstanding'], true)" />
-        <x-stat tone="tertiary" :label="t('member.myProfit')" :value="money($pos['profit'], true)" />
+        <x-stat :label="t('member.shareValue')" :value="money($pos['shareValue'])" :hint="num($pos['shareQty']).' '.strtolower(t('shares.quantity'))" />
+        <x-stat :label="t('member.savingsBalance')" :value="money($pos['savingsBalance'])" />
+        <x-stat :label="t('member.outstanding')" :value="money($pos['loanOutstanding'])" />
+        <x-stat :label="t('member.myProfit')" :value="money($pos['profit'])" :hint="t('member.profitHint')" />
     </div>
 
     <div class="mt-4 grid gap-4 lg:grid-cols-3">
         <x-card class="lg:col-span-2">
-            <x-card-header :title="t('member.savingsBalance')" subtitle="Apr – Sep 2026" />
+            <x-card-header :title="t('member.savingsOverTime')" :subtitle="t('member.monthEndBalance').' · '.$savingsTrend['period']" />
             <div class="h-52">
-                <canvas x-chart="{ type: 'area', labels: ['Apr','May','Jun','Jul','Aug','Sep'],
-                    series: [{ label: 's', color: '#2563eb', data: @js(collect(range(0,5))->map(fn($i) => (int) round($pos['savingsBalance'] * (0.6 + $i * 0.08)))) }] }"></canvas>
+                <canvas x-chart="{ type: 'bar', labels: @js($savingsTrend['labels']),
+                    series: [{ label: @js(t('member.savingsBalance')), color: '#115e59', data: @js($savingsTrend['balances']) }] }"></canvas>
             </div>
         </x-card>
         <div class="flex flex-col gap-4">
             @if ($nextRepay)
                 <x-card>
                     <p class="text-[13px] font-medium text-neutral-500">{{ t('member.nextRepayment') }}</p>
-                    <p class="mt-1 font-display text-xl font-bold text-neutral-900">{{ money($nextRepay->total_due) }}</p>
+                    <p class="mt-1 font-display text-xl font-bold {{ $nextRepay->status === 'overdue' ? 'text-red-700' : 'text-neutral-900' }}">{{ money($nextRepay->total_due - $nextRepay->amount_paid) }}</p>
                     <div class="mt-1 flex items-center gap-2">
                         <span class="text-[13px] text-neutral-500">{{ fdate($nextRepay->due_date) }}</span>
                         @if ($nextRepay->status === 'overdue')<x-badge tone="danger" dot>{{ t('loans.scheduleStatus.overdue') }}</x-badge>@endif
                     </div>
-                    <x-btn :href="route('member.loans.show', $pos['activeLoan'])" size="sm" class="mt-3 w-full">{{ t('loans.recordRepayment') }}</x-btn>
+                    <p class="mt-2 text-[12.5px] text-neutral-500">{{ t('member.payToTreasurer') }}</p>
+                    <x-btn variant="outlined" :href="route('member.loans.show', $pos['activeLoan'])" size="sm" class="mt-3 w-full">{{ t('member.viewLoan') }}</x-btn>
                 </x-card>
             @endif
             <x-card>
@@ -42,10 +43,9 @@
     <x-card class="mt-4">
         <x-card-header :title="t('member.quickActions')" />
         <div class="mt-2 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            @foreach ([[t('member.applyLoan'), 'credit-card', route('member.loans.apply')], [t('member.makeDeposit'), 'banknotes', route('member.savings')], [t('member.buyShares'), 'plus-circle', route('member.shares')], [t('member.downloadStatement'), 'arrow-down-tray', route('member.statements')]] as $a)
-                <a href="{{ $a[2] }}" class="flex items-center gap-3 rounded-xl border border-neutral-200 p-4 hover:border-primary-300 hover:bg-primary-50/50">
-                    <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-700"><x-dynamic-component :component="'heroicon-o-'.$a[1]" class="h-5 w-5" /></span>
-                    <span class="text-[13.5px] font-medium text-neutral-700">{{ $a[0] }}</span>
+            @foreach ([[t('member.applyLoan'), route('member.loans.apply')], [t('member.seeSavings'), route('member.savings')], [t('member.seeRepayments'), route('member.repayments')], [t('member.downloadStatement'), route('member.statements')]] as [$label, $href])
+                <a href="{{ $href }}" class="flex items-center justify-between gap-3 rounded-md border border-neutral-200 px-4 py-3 text-[13.5px] font-medium text-neutral-700 hover:border-primary-300 hover:bg-primary-50/40">
+                    {{ $label }} <x-heroicon-o-chevron-right class="h-4 w-4 text-neutral-400" />
                 </a>
             @endforeach
         </div>

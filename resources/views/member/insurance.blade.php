@@ -5,8 +5,8 @@
         <x-card><x-empty :title="t('common.noData')" :hint="t('insurance.subtitle')" /></x-card>
     @else
         <div class="grid gap-4 sm:grid-cols-3">
-            <x-stat :label="t('insurance.coverageAmount')" :value="money($account->coverage_amount, true)" />
-            <x-stat tone="tertiary" :label="t('insurance.totalContributions')" :value="money($contributions->sum('amount'), true)" />
+            <x-stat :label="t('insurance.coverageAmount')" :value="money($account->coverage_amount)" />
+            <x-stat tone="tertiary" :label="t('insurance.totalContributions')" :value="money($contributions->sum('amount'))" />
             <x-stat tone="secondary" :label="t('common.status')" :value="t('insurance.status.'.$account->status)" />
         </div>
         <x-card class="mt-4">
@@ -26,7 +26,7 @@
         <x-card class="mt-4" flush>
             <x-card-header :title="t('nav.claims')" class="p-4" />
             <x-mini-table :head="[t('insurance.claimNumber'), t('insurance.claimType'), t('insurance.amountRequested'), t('insurance.amountApproved'), t('common.status')]" :align="['','','right','right','']"
-                :rows="$claims->map(fn ($c) => [$c->claim_number, $c->claim_type, money($c->amount_requested), $c->amount_approved ? money($c->amount_approved) : '—', ucfirst(str_replace('_',' ',$c->status))])" />
+                :rows="$claims->map(fn ($c) => [$c->claim_number, $c->claim_type, money($c->amount_requested), $c->amount_approved ? money($c->amount_approved) : '—', t('insurance.claimStatus.'.$c->status)])" />
         </x-card>
     @endif
 </x-layouts.app>

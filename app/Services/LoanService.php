@@ -60,10 +60,25 @@ class LoanService
         return $application;
     }
 
+    /**
+     * Turn a member's application into a loan awaiting a decision, so it shows
+     * under Loans → Applications for staff to approve or reject.
+     */
+    public function submitApplication(Request $request, LoanApplication $application): Loan
+    {
+        return DB::transaction(function () use ($request, $application) {
+            $loan = $this->createLoanFromApplication($application->loadMissing('product'), $request);
+            $loan->update(['status' => 'submitted']);
+            Audit::log($request, 'LOAN_APPLICATION', 'Loan', $loan->id, null, ['amount' => $loan->principal_amount, 'period' => $loan->period]);
+
+            return $loan;
+        });
+    }
+
     public function decide(Request $request, string $loanOrAppId, string $decision, ?string $note): Loan
     {
         return DB::transaction(function () use ($request, $loanOrAppId, $decision, $note) {
-            $loan = Loan::find($loanOrAppId);
+            $loan = Loan::find($loanOrAppId) ?? Loan::where('loan_application_id', $loanOrAppId)->first();
 
             if (! $loan) {
                 // treat as application id → create the loan on approval
@@ -102,6 +117,9 @@ class LoanService
     {
         $q = $this->calc->quote($app->product, $app->requested_amount, $app->requested_period);
         $next = Loan::count() + 1;
+        while (Loan::where('loan_number', 'LN-'.str_pad((string) $next, 6, '0', STR_PAD_LEFT))->exists()) {
+            $next++;
+        }
 
         return Loan::create([
             'organization_id' => $app->organization_id,

@@ -9,7 +9,7 @@
     </x-page-header>
     <div class="grid gap-4 sm:grid-cols-3">
         <x-stat :label="t('nav.active')" :value="$active" />
-        <x-stat tone="neutral" :label="t('member.outstanding')" :value="money($out, true)" />
+        <x-stat tone="neutral" :label="t('member.outstanding')" :value="money($out)" />
         <x-stat tone="info" :label="t('common.total')" :value="$loans->count()" />
     </div>
     <x-card class="mt-4" flush>
@@ -21,8 +21,8 @@
                 </div>
                 <p class="text-[12px] text-neutral-500">{{ $l->product->name }}</p>
                 <div class="mt-2 flex gap-6 text-[13px]">
-                    <span><span class="text-neutral-400">{{ t('loans.principal') }}</span> <b>{{ money($l->principal_amount, true) }}</b></span>
-                    <span><span class="text-neutral-400">{{ t('loans.outstanding') }}</span> <b>{{ money($l->outstanding_balance, true) }}</b></span>
+                    <span><span class="text-neutral-400">{{ t('loans.principal') }}</span> <b>{{ money($l->principal_amount) }}</b></span>
+                    <span><span class="text-neutral-400">{{ t('loans.outstanding') }}</span> <b>{{ money($l->outstanding_balance) }}</b></span>
                 </div>
                 <div class="mt-2"><x-progress :value="$l->total_amount ? $l->amount_paid / $l->total_amount * 100 : 0" showLabel :tone="$l->status==='overdue'?'danger':'primary'" /></div>
             </a>

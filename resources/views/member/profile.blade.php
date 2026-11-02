@@ -26,6 +26,10 @@
                 </x-card>
             </form>
             <x-card>
+                <x-card-header :title="t('account.changePassword')" />
+                @include('partials.password-form')
+            </x-card>
+            <x-card>
                 <x-card-header :title="t('common.details')" />
                 <x-kv :items="[
                     ['label' => t('members.memberNumber'), 'value' => $member->member_number],

@@ -17,7 +17,7 @@
                     ['label' => t('loans.totalRepayable'), 'value' => '<b>'.money($loan->total_amount).'</b>'],
                     ['label' => t('loans.disbursementDate'), 'value' => fdate($loan->disbursement_date)],
                     ['label' => t('loans.maturityDate'), 'value' => fdate($loan->maturity_date)],
-                    ['label' => t('common.status'), 'value' => ucfirst(str_replace('_',' ',$loan->status))],
+                    ['label' => t('common.status'), 'value' => e(t('loans.status.'.$loan->status))],
                 ]" />
             </x-card>
         </div>
@@ -30,13 +30,13 @@
             <div class="p-4">
                 @if ($tab === 'schedule')
                     <x-mini-table :head="['#', t('loans.dueDate'), t('loans.amountDue'), t('loans.amountPaid'), t('common.status')]" :align="['','','right','right','']"
-                        :rows="$loan->schedule->map(fn($r) => [$r->installment_number, fdate($r->due_date), money($r->total_due), money($r->amount_paid), ucfirst($r->status)])" />
+                        :rows="$loan->schedule->map(fn($r) => [$r->installment_number, fdate($r->due_date), money($r->total_due), money($r->amount_paid), t('loans.scheduleStatus.'.$r->status)])" />
                 @elseif ($tab === 'repayments')
                     <x-mini-table :head="[t('common.date'), t('common.reference'), t('common.total'), t('payments.method')]" :align="['','','right','']"
                         :rows="$loan->repayments->map(fn($r) => [fdate($r->payment_date), $r->reference, money($r->total_paid), t('payments.methods.'.$r->method)])" />
                 @else
                     <x-mini-table :head="[t('guarantors.guarantor'), t('guarantors.guaranteedAmount'), t('common.status')]" :align="['','right','']"
-                        :rows="$loan->guarantors->map(fn($g) => [e($g->guarantorMember?->full_name), money($g->guaranteed_amount), ucfirst($g->status)])" />
+                        :rows="$loan->guarantors->map(fn($g) => [e($g->guarantorMember?->full_name), money($g->guaranteed_amount), t('guarantors.status.'.$g->status)])" />
                 @endif
             </div>
         </x-card>

@@ -10,10 +10,14 @@ use App\Models\LoanRepayment;
 use App\Models\LoanRepaymentSchedule;
 use App\Models\Member;
 use App\Models\Notification;
+use App\Models\ProfitAllocation;
 use App\Models\Project;
-use App\Services\LoanCalculationService;
+use App\Services\LoanService;
 use App\Support\Audit;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Validation\Rule;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PortalController extends Controller
 {
@@ -41,7 +45,9 @@ class PortalController extends Controller
             'activeLoan' => $active,
             'loans' => $loans,
             'projectInvestment' => (int) $inv->sum('amount'),
-            'profit' => (int) ($inv->sum('profit_share') + round($shareValue / 1_000_000 * 42000)),
+            // Real money only: project profit shares plus approved / paid dividend allocations.
+            'profit' => (int) $inv->sum('profit_share') + (int) ProfitAllocation::where('member_id', $m->id)
+                ->whereHas('distribution', fn ($q) => $q->whereIn('status', ['approved', 'distributed']))->sum('amount'),
             'insurance' => $m->insuranceAccount,
         ];
     }
@@ -49,14 +55,35 @@ class PortalController extends Controller
     public function home(Request $request)
     {
         $member = $this->member($request);
+        app(LoanService::class)->markOverdue($member->organization_id);
         $pos = $this->position($member);
         $txns = $member->transactions()->latest('created_at')->limit(6)->get();
         $nextRepay = $pos['activeLoan']
             ? LoanRepaymentSchedule::where('loan_id', $pos['activeLoan']->id)
-                ->whereIn('status', ['pending', 'overdue'])->orderBy('due_date')->first()
+                ->whereIn('status', ['pending', 'partial', 'overdue'])->orderBy('due_date')->first()
             : null;
+        $savingsTrend = $this->savingsTrend($member);
 
-        return view('member.home', compact('member', 'pos', 'txns', 'nextRepay'));
+        return view('member.home', compact('member', 'pos', 'txns', 'nextRepay', 'savingsTrend'));
+    }
+
+    /**
+     * Savings balance at the end of each of the last six months, from the member's own movements.
+     *
+     * @return array{labels: array<int, string>, balances: array<int, int>, period: string}
+     */
+    private function savingsTrend(Member $member): array
+    {
+        $movements = $member->savingsAccount
+            ? $member->savingsAccount->transactions()->orderBy('created_at')->get(['created_at', 'balance_after'])
+            : collect();
+        $months = collect(range(5, 0))->map(fn (int $back) => now()->startOfMonth()->subMonths($back));
+
+        return [
+            'labels' => $months->map(fn ($m) => $m->translatedFormat('M'))->all(),
+            'balances' => $months->map(fn ($m) => (int) ($movements->filter(fn ($t) => $t->created_at <= $m->copy()->endOfMonth())->last()?->balance_after ?? 0))->all(),
+            'period' => $months->first()->translatedFormat('M').' – '.$months->last()->translatedFormat('M Y'),
+        ];
     }
 
     public function shares(Request $request)
@@ -103,28 +130,34 @@ class PortalController extends Controller
         return view('member.loan-apply', compact('member', 'products', 'others'));
     }
 
-    public function apply(Request $request, LoanCalculationService $calc)
+    public function apply(Request $request, LoanService $loans)
     {
         $member = $this->member($request);
+        $product = LoanProduct::where('organization_id', $member->organization_id)->where('status', 'active')
+            ->find($request->input('loan_product_id'));
         $data = $request->validate([
-            'loan_product_id' => ['required', 'exists:loan_products,id'],
-            'amount' => ['required', 'integer', 'min:1'],
-            'period' => ['required', 'integer', 'min:1', 'max:36'],
-            'purpose' => ['nullable', 'string'],
+            'loan_product_id' => ['required', Rule::in([$product?->id])],
+            'amount' => ['required', 'integer', 'min:'.($product->minimum_amount ?? 1), 'max:'.($product->maximum_amount ?? 0)],
+            'period' => ['required', 'integer', 'min:1', 'max:'.($product->repayment_period ?? 1)],
+            'purpose' => ['required', 'string', 'max:255'],
         ]);
-        LoanApplication::create([
+        if ($member->loans()->whereIn('status', ['draft', 'submitted', 'under_review'])->exists()) {
+            return back()->withInput()->with('toast', t('member.applicationPending'))->with('toast_tone', 'error');
+        }
+        $application = LoanApplication::create([
             'organization_id' => $member->organization_id,
             'member_id' => $member->id,
             'loan_product_id' => $data['loan_product_id'],
             'requested_amount' => $data['amount'],
             'requested_period' => $data['period'],
             'purpose' => $data['purpose'] ?? null,
+            'repayment_frequency' => 'monthly',
             'status' => 'submitted',
             'submitted_at' => now(),
         ]);
-        Audit::log($request, 'LOAN_APPLICATION', 'LoanApplication', $member->id);
+        $loans->submitApplication($request, $application);
 
-        return redirect()->route('member.loans')->with('toast', t('common.submit').' ✓');
+        return redirect()->route('member.loans')->with('toast', t('member.applicationSent'));
     }
 
     public function repayments(Request $request)
@@ -182,6 +215,61 @@ class PortalController extends Controller
         return view('member.statements', compact('member', 'pos'));
     }
 
+    /**
+     * The member's own statement as CSV: savings movements, share purchases and
+     * loan repayments in the chosen period, with opening and closing savings balance.
+     */
+    public function downloadStatement(Request $request): StreamedResponse
+    {
+        $member = $this->member($request);
+        $period = in_array($request->get('period'), ['month', 'year', 'all'], true) ? $request->get('period') : 'month';
+        $from = match ($period) {
+            'month' => now()->startOfMonth(),
+            'year' => now()->startOfYear(),
+            default => null,
+        };
+        $to = now();
+
+        $savings = $member->savingsAccount
+            ? $member->savingsAccount->transactions()->orderBy('created_at')->get()
+            : collect();
+        $opening = $from ? (int) ($savings->filter(fn ($t) => $t->created_at < $from)->last()?->balance_after ?? 0) : 0;
+        $closing = (int) ($savings->last()?->balance_after ?? 0);
+
+        $rows = collect();
+        foreach ($savings->filter(fn ($t) => ! $from || $t->created_at >= $from) as $t) {
+            $rows->push([$t->created_at, t('nav.savings'), t('savings.txnType.'.$t->type), $t->reference, $t->balance_after - $t->balance_before, $t->balance_after]);
+        }
+        foreach ($member->shares()->when($from, fn ($q) => $q->where('purchased_at', '>=', $from->toDateString()))->get() as $s) {
+            $rows->push([$s->purchased_at, t('nav.shares'), num($s->quantity).' × '.money($s->price_per_share), $s->transaction_reference, $s->total_value, '']);
+        }
+        $repayments = LoanRepayment::where('member_id', $member->id)->with('loan:id,loan_number')
+            ->when($from, fn ($q) => $q->where('payment_date', '>=', $from->toDateString()))->get();
+        foreach ($repayments as $r) {
+            $rows->push([$r->payment_date, t('nav.loans'), t('loans.recordRepayment').' '.$r->loan?->loan_number, $r->reference, $r->total_paid, '']);
+        }
+        $rows = $rows->sortBy(fn ($row) => Carbon::parse($row[0])->timestamp)->values();
+
+        Audit::log($request, 'DOWNLOAD_STATEMENT', 'Member', $member->id, null, ['period' => $period]);
+        $filename = sprintf('statement-%s-%s.csv', $member->member_number, now()->format('Y-m-d'));
+
+        return response()->streamDownload(function () use ($member, $from, $to, $opening, $closing, $rows) {
+            $out = fopen('php://output', 'w');
+            fprintf($out, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM for Excel
+            fputcsv($out, [$member->full_name, $member->member_number]);
+            fputcsv($out, [t('statements.period'), ($from ? fdate($from) : '—').' – '.fdate($to)]);
+            fputcsv($out, [t('statements.opening').' ('.t('nav.savings').')', $opening]);
+            fputcsv($out, []);
+            fputcsv($out, [t('common.date'), t('statements.section'), t('common.description'), t('common.reference'), t('common.amount'), t('savings.balanceAfter')]);
+            foreach ($rows as $row) {
+                fputcsv($out, [fdate($row[0]), $row[1], $row[2], $row[3], $row[4], $row[5]]);
+            }
+            fputcsv($out, []);
+            fputcsv($out, [t('statements.closing').' ('.t('nav.savings').')', $closing]);
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
     public function notifications(Request $request)
     {
         $notifications = Notification::visibleTo($request->user(), $this->member($request)->organization_id)
@@ -201,12 +289,13 @@ class PortalController extends Controller
     {
         $member = $this->member($request);
         $member->update($request->validate([
-            'phone' => ['required', 'string'],
-            'email' => ['nullable', 'email'],
-            'address' => ['nullable', 'string'],
-            'next_of_kin' => ['nullable', 'string'],
-            'next_of_kin_phone' => ['nullable', 'string'],
+            'phone' => ['required', 'string', 'max:20'],
+            'email' => ['nullable', 'email', 'max:120'],
+            'address' => ['nullable', 'string', 'max:255'],
+            'next_of_kin' => ['nullable', 'string', 'max:120'],
+            'next_of_kin_phone' => ['nullable', 'string', 'max:20'],
         ]));
+        Audit::log($request, 'UPDATE_OWN_PROFILE', 'Member', $member->id);
 
         return back()->with('toast', t('common.saveChanges').' ✓');
     }

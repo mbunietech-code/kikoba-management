@@ -6,8 +6,8 @@
 <x-layouts.app :title="$title">
     <x-page-header :title="t('nav.myProjects')" :subtitle="t('projects.subtitle')" />
     <div class="grid gap-4 sm:grid-cols-3">
-        <x-stat :label="t('projects.myInvestment')" :value="money($invested, true)" />
-        <x-stat tone="tertiary" :label="t('projects.totalReturn')" :value="money($returns, true)" />
+        <x-stat :label="t('projects.myInvestment')" :value="money($invested)" />
+        <x-stat tone="tertiary" :label="t('projects.totalReturn')" :value="money($returns)" />
         <x-stat tone="info" :label="t('common.total')" :value="$investments->count()" />
     </div>
     <div class="mt-4 grid gap-4 md:grid-cols-2">

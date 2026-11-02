@@ -117,7 +117,7 @@
                                 ['label' => t('insurance.monthlyContribution'), 'value' => money($member->insuranceAccount->monthly_contribution)],
                                 ['label' => t('insurance.coverageAmount'), 'value' => money($member->insuranceAccount->coverage_amount)],
                                 ['label' => t('insurance.endDate'), 'value' => fdate($member->insuranceAccount->end_date)],
-                                ['label' => t('common.status'), 'value' => ucfirst($member->insuranceAccount->status)],
+                                ['label' => t('common.status'), 'value' => e(t('insurance.status.'.$member->insuranceAccount->status))],
                             ]" />
                         @else
                             <p class="text-sm text-neutral-400">{{ t('common.noData') }}</p>

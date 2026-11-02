@@ -191,6 +191,7 @@ Route::middleware(['auth', 'role:member'])->prefix('member')->name('member.')->g
         Route::get('/insurance', 'insurance')->name('insurance');
         Route::get('/transactions', 'transactions')->name('transactions');
         Route::get('/statements', 'statements')->name('statements');
+        Route::get('/statements/download', 'downloadStatement')->name('statements.download');
         Route::get('/notifications', 'notifications')->name('notifications');
         Route::get('/profile', 'profile')->name('profile');
         Route::put('/profile', 'updateProfile')->name('profile.update');

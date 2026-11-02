@@ -31,7 +31,7 @@
                     </div>
                 </x-card>
             @endif
-            <x-stat tone="tertiary" :label="t('projects.actualProfit')" :value="money($project->actual_profit, true)" />
+            <x-stat tone="tertiary" :label="t('projects.actualProfit')" :value="money($project->actual_profit)" />
         </div>
     </div>
 </x-layouts.app>
