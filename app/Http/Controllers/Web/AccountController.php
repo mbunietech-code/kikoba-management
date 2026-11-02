@@ -31,15 +31,28 @@ class AccountController extends Controller
         return back()->with('toast', t('common.saveChanges').' ✓');
     }
 
+    /**
+     * Shown right after signing in with a temporary password.
+     */
+    public function newPassword(Request $request): View|RedirectResponse
+    {
+        if (! $request->user()->must_change_password) {
+            return redirect('/');
+        }
+
+        return view('auth.new-password');
+    }
+
     public function password(Request $request): RedirectResponse
     {
         $data = $request->validate([
             'current_password' => ['required', 'current_password'],
-            'password' => ['required', 'confirmed', Password::min(8)],
+            'password' => ['required', 'confirmed', Password::min(8), 'different:current_password'],
         ]);
-        $request->user()->update(['password' => $data['password']]);
+        $wasTemporary = $request->user()->must_change_password;
+        $request->user()->update(['password' => $data['password'], 'must_change_password' => false]);
         Audit::log($request, 'CHANGE_OWN_PASSWORD', 'User', $request->user()->id);
 
-        return back()->with('toast', t('account.passwordChanged'));
+        return ($wasTemporary ? redirect('/') : back())->with('toast', t('account.passwordChanged'));
     }
 }

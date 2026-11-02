@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveMemberRequest;
 use App\Models\Member;
 use App\Models\SavingsAccount;
+use App\Services\MemberLoginService;
 use App\Support\Audit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -110,6 +111,30 @@ class MemberController extends Controller
         Audit::log($request, 'DELETE_MEMBER', 'Member', $member->id);
 
         return redirect()->route('admin.members.index')->with('toast', t('common.deleted'));
+    }
+
+    /**
+     * Create (or renew) the member's portal login and send the details.
+     */
+    public function sendLogin(Request $request, Member $member, MemberLoginService $logins): RedirectResponse
+    {
+        $this->ensureOrganization($request, $member);
+        $result = $logins->provision($request, $member);
+
+        return back()->with('login_results', [$result]);
+    }
+
+    /**
+     * Logins for every active member who does not have one yet.
+     */
+    public function sendMissingLogins(Request $request, MemberLoginService $logins): RedirectResponse
+    {
+        $members = Member::where('organization_id', $request->user()->organization_id)
+            ->where('status', 'active')->whereNull('user_id')->orderBy('full_name')->get();
+        $results = $members->map(fn (Member $m) => $logins->provision($request, $m))->all();
+
+        return back()->with('login_results', $results)
+            ->with('toast', t('memberLogin.bulkDone', ['count' => count($results)]));
     }
 
     /**

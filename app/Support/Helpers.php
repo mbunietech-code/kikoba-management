@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
 
@@ -111,5 +112,35 @@ if (! function_exists('next_reference')) {
         } while ($query()->where($column, $reference)->exists());
 
         return $reference;
+    }
+}
+
+if (! function_exists('phone_variants')) {
+    /**
+     * The ways a Tanzanian number may be stored: 0716123456, 255716123456, +255716123456.
+     *
+     * @return array<int, string>
+     */
+    function phone_variants(string $phone): array
+    {
+        $digits = preg_replace('/\D+/', '', $phone) ?? '';
+        if (str_starts_with($digits, '0')) {
+            $digits = '255'.substr($digits, 1);
+        } elseif (strlen($digits) === 9) {
+            $digits = '255'.$digits;
+        }
+        if (! str_starts_with($digits, '255') || strlen($digits) !== 12) {
+            return [trim($phone)];
+        }
+
+        return array_values(array_unique([trim($phone), $digits, '+'.$digits, '0'.substr($digits, 3)]));
+    }
+}
+
+if (! function_exists('find_user_by_login')) {
+    /** The user signing in with an e-mail address or a phone number in any common format. */
+    function find_user_by_login(string $login): ?User
+    {
+        return User::where('email', $login)->orWhereIn('phone', phone_variants($login))->first();
     }
 }

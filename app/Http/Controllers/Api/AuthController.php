@@ -57,9 +57,7 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        $user = User::where('email', $data['login'])
-            ->orWhere('phone', $data['login'])
-            ->first();
+        $user = find_user_by_login($data['login']);
 
         if (! $user || ! Hash::check($data['password'], $user->password)) {
             throw ValidationException::withMessages(['login' => 'These credentials do not match our records.']);
@@ -112,7 +110,7 @@ class AuthController extends Controller
     public function requestOtp(Request $request)
     {
         $data = $request->validate(['login' => ['required', 'string']]);
-        $user = User::where('email', $data['login'])->orWhere('phone', $data['login'])->first();
+        $user = find_user_by_login($data['login']);
 
         if ($user && $user->phone) {
             $otp = $this->otp->issue($user, 'login');

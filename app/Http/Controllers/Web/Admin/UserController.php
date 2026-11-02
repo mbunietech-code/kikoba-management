@@ -42,7 +42,7 @@ class UserController extends Controller
         $user = User::create([
             'organization_id' => app('kikoba.org')->id,
             'name' => $data['name'], 'email' => $data['email'], 'phone' => $data['phone'] ?? null,
-            'password' => $data['password'], 'status' => 'active',
+            'password' => $data['password'], 'must_change_password' => true, 'status' => 'active',
         ]);
         $user->assignRole($data['role']);
         Audit::log($request, 'CREATE_USER', 'User', $user->id);
@@ -67,7 +67,7 @@ class UserController extends Controller
         }
         $user->update(['name' => $data['name'], 'phone' => $data['phone'] ?? null, 'status' => $data['status']]);
         if (! empty($data['password'])) {
-            $user->update(['password' => $data['password']]);
+            $user->update(['password' => $data['password'], 'must_change_password' => true]);
         }
         if ($data['status'] !== 'active') {
             $user->tokens()->delete();

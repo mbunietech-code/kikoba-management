@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Organization;
+use App\Services\MessagingSettings;
 use App\Support\Features;
 use Closure;
 use Illuminate\Http\Request;
@@ -20,6 +21,10 @@ class ShareOrganization
         app()->instance('kikoba.currency', $org->currency ?: 'TZS');
         app()->instance('kikoba.org', $org);
         app()->instance('kikoba.features', $features);
+
+        if ($org->exists) {
+            app(MessagingSettings::class)->apply($org->id);
+        }
 
         View::share('org', $org);
         View::share('currentUser', $request->user());

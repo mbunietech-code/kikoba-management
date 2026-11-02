@@ -5,6 +5,7 @@ use App\Http\Controllers\Web\Admin;
 use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\Member;
 use App\Http\Middleware\AuthResponseHeaders;
+use App\Http\Middleware\EnsurePasswordChanged;
 use App\Http\Middleware\EnsureStaff;
 use Illuminate\Support\Facades\Route;
 
@@ -29,9 +30,10 @@ Route::middleware(['guest', AuthResponseHeaders::class])->group(function () {
 });
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
 Route::put('/account/password', [AccountController::class, 'password'])->middleware('auth')->name('account.password');
+Route::get('/account/new-password', [AccountController::class, 'newPassword'])->middleware('auth')->name('account.new-password');
 
 /* -------------------------------- admin -------------------------------- */
-Route::middleware(['auth', EnsureStaff::class])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', EnsurePasswordChanged::class, EnsureStaff::class])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/account', [AccountController::class, 'show'])->name('account');
     Route::put('/account', [AccountController::class, 'update'])->name('account.update');
@@ -45,6 +47,8 @@ Route::middleware(['auth', EnsureStaff::class])->prefix('admin')->name('admin.')
         Route::get('/{member}/photo', 'photo')->name('photo')->can('members.view');
         Route::put('/{member}', 'update')->name('update')->can('members.update');
         Route::delete('/{member}', 'destroy')->name('destroy')->can('members.delete');
+        Route::post('/{member}/login', 'sendLogin')->name('login')->can('users.manage');
+        Route::post('/logins/send-missing', 'sendMissingLogins')->name('logins.missing')->can('users.manage');
     });
 
     Route::controller(Admin\ShareController::class)->prefix('shares')->name('shares.')->middleware('feature:shares')->group(function () {
@@ -178,13 +182,16 @@ Route::middleware(['auth', EnsureStaff::class])->prefix('admin')->name('admin.')
         Route::put('/organization', 'organization')->name('organization')->can('settings.manage');
         Route::put('/config', 'config')->name('config')->can('settings.manage');
         Route::put('/modules', 'modules')->name('modules')->can('settings.manage');
+        Route::put('/messaging', 'messaging')->name('messaging')->can('settings.manage');
+        Route::post('/messaging/test-sms', 'testSms')->name('messaging.testSms')->can('settings.manage');
+        Route::post('/messaging/test-email', 'testEmail')->name('messaging.testEmail')->can('settings.manage');
     });
 
     Route::get('/audit-logs', [Admin\AuditController::class, 'index'])->name('audit.index')->can('audit.view');
 });
 
 /* -------------------------------- member ------------------------------- */
-Route::middleware(['auth', 'role:member'])->prefix('member')->name('member.')->group(function () {
+Route::middleware(['auth', EnsurePasswordChanged::class, 'role:member'])->prefix('member')->name('member.')->group(function () {
     Route::controller(Member\PortalController::class)->group(function () {
         Route::get('/', 'home')->name('home');
         Route::get('/shares', 'shares')->name('shares');

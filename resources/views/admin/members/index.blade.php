@@ -3,9 +3,15 @@
     <x-page-header :title="t('members.title')" :subtitle="t('members.countSummary', ['count' => $members->total()])">
         <x-slot:actions>
             @can('reports.view')<x-btn variant="outlined" icon="arrow-down-tray" :href="route('admin.reports.download', 'membership')">{{ t('common.export') }} (CSV)</x-btn>@endcan
+            @can('users.manage')
+                <form method="POST" action="{{ route('admin.members.logins.missing') }}" onsubmit="return confirm(@js(t('memberLogin.bulkConfirm')))">@csrf
+                    <button class="k-btn k-btn-outlined"><x-heroicon-o-paper-airplane class="h-4 w-4" /> {{ t('memberLogin.bulkButton') }}</button>
+                </form>
+            @endcan
             @can('members.create')<x-btn :href="route('admin.members.create')" icon="user-plus">{{ t('members.addMember') }}</x-btn>@endcan
         </x-slot:actions>
     </x-page-header>
+    @include('admin.members._login-results')
 
     @include('partials.toolbar', ['filters' => [
         ['name' => 'status', 'value' => request('status'), 'options' => ['' => t('common.all').' — '.t('common.status')] + collect(['active','pending','suspended','inactive','deceased'])->mapWithKeys(fn($s) => [$s => t("members.status.$s")])->all()],

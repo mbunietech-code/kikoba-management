@@ -105,7 +105,7 @@ class CommunityContributionsTest extends TestCase
         $html = $this->get(route('admin.community.index', ['month' => now()->format('Y-m')]))->assertOk()->getContent();
 
         $this->assertStringContainsString(t('community.paidInFull', ['paid' => 1, 'total' => 2]), $html);
-        $this->assertStringContainsString($other->full_name, $html);
+        $this->assertStringContainsString(e($other->full_name), $html);
     }
 
     public function test_a_member_sees_this_months_jamii_and_dharura_at_home(): void

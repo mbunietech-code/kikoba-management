@@ -8,6 +8,7 @@
             @can('members.update')<x-btn variant="outlined" :href="route('admin.members.edit', $member)" icon="pencil-square">{{ t('common.edit') }}</x-btn>@endcan
         </x-slot:actions>
     </x-page-header>
+    @include('admin.members._login-results')
 
     <div class="grid gap-4 lg:grid-cols-[300px_1fr]">
         <x-card>
@@ -24,6 +25,24 @@
                     <p class="flex items-center gap-2"><x-heroicon-o-envelope class="h-4 w-4 text-neutral-400" /> {{ $member->email ?: '—' }}</p>
                     <p class="flex items-center gap-2"><x-heroicon-o-map-pin class="h-4 w-4 text-neutral-400" /> {{ $member->address ?: '—' }}</p>
                 </div>
+            </div>
+            @php $login = $member->user_id ? \App\Models\User::find($member->user_id) : null; @endphp
+            <div class="mt-4 border-t border-neutral-100 pt-4 text-left">
+                <p class="text-[12.5px] font-semibold text-neutral-700">{{ t('memberLogin.portalAccess') }}</p>
+                <p class="mt-1 text-[12.5px] text-neutral-500">
+                    @if (! $login) {{ t('memberLogin.noLoginYet') }}
+                    @elseif ($login->isStaff()) {{ t('memberLogin.usesStaffLogin') }}
+                    @elseif ($login->must_change_password) {{ t('memberLogin.waitingFirstSignIn') }}
+                    @else {{ t('memberLogin.lastSignIn', ['when' => $login->last_login_at?->diffForHumans() ?? t('users.never')]) }} @endif
+                </p>
+                @can('users.manage')
+                    @unless ($login?->isStaff())
+                        <form method="POST" action="{{ route('admin.members.login', $member) }}" class="mt-2"
+                              onsubmit="return confirm(@js($login ? t('memberLogin.resendConfirm') : t('memberLogin.sendConfirm')))">@csrf
+                            <button class="k-btn k-btn-outlined k-btn-sm w-full">{{ $login ? t('memberLogin.resend') : t('memberLogin.send') }}</button>
+                        </form>
+                    @endunless
+                @endcan
             </div>
         </x-card>
 

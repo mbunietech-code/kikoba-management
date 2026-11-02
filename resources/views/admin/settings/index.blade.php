@@ -2,9 +2,11 @@
 <x-layouts.app :title="$title">
     <x-page-header :title="t('settings.title')" :subtitle="t('settings.subtitle')" />
     <x-card flush>
-        <x-tabs :current="$tab" :items="collect(['organization','modules','financial'])->map(fn ($k) => ['key' => $k, 'label' => t('settings.tabs.'.$k)])->all()" />
+        <x-tabs :current="$tab" :items="collect(['organization','modules','financial','messaging'])->map(fn ($k) => ['key' => $k, 'label' => t('settings.tabs.'.$k)])->all()" />
         <div class="p-5">
-            @if ($tab === 'modules')
+            @if ($tab === 'messaging')
+                @include('admin.settings._messaging')
+            @elseif ($tab === 'modules')
                 <form method="POST" action="{{ route('admin.settings.modules') }}" class="max-w-xl">
                     @csrf @method('PUT')
                     <p class="mb-4 text-[13px] text-neutral-500">{{ t('settings.modulesHint') }}</p>

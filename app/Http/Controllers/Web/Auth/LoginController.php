@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Web\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -44,7 +43,7 @@ class LoginController extends Controller
         }
 
         RateLimiter::hit($key, 60);
-        $user = User::where('email', $data['login'])->orWhere('phone', $data['login'])->first();
+        $user = find_user_by_login($data['login']);
 
         $valid = (new Timebox)->call(
             fn (): bool => $user !== null && Hash::check($data['password'], $user->password),

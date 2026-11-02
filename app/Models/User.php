@@ -17,7 +17,7 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, HasRoles, HasUuids, Notifiable, SoftDeletes;
 
     protected $fillable = [
-        'organization_id', 'name', 'email', 'phone', 'password', 'status',
+        'organization_id', 'name', 'email', 'phone', 'password', 'must_change_password', 'status',
         'email_verified_at', 'phone_verified_at', 'last_login_at',
     ];
 
@@ -30,6 +30,7 @@ class User extends Authenticatable
             'phone_verified_at' => 'datetime',
             'last_login_at' => 'datetime',
             'password' => 'hashed',
+            'must_change_password' => 'boolean',
         ];
     }
 
