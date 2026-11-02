@@ -812,7 +812,6 @@ return [
         'temporaryPassword' => 'Nenosiri la muda',
         'portalAccess' => 'Kuingia kwenye mfumo',
         'noLoginYet' => 'Bado hana login.',
-        'usesStaffLogin' => 'Anatumia login yake ya kiongozi.',
         'waitingFirstSignIn' => 'Taarifa zimetumwa — bado hajaingia.',
         'lastSignIn' => 'Aliingia mara ya mwisho :when.',
         'send' => 'Tengeneza login na tuma',

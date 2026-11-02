@@ -10,7 +10,6 @@ use App\Services\OtpService;
 use App\Services\TokenService;
 use App\Support\ApiResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
@@ -57,9 +56,9 @@ class AuthController extends Controller
             'password' => ['required', 'string'],
         ]);
 
-        $user = find_user_by_login($data['login']);
+        $user = authenticate_login($data['login'], $data['password']);
 
-        if (! $user || ! Hash::check($data['password'], $user->password)) {
+        if (! $user) {
             throw ValidationException::withMessages(['login' => 'These credentials do not match our records.']);
         }
         if ($user->status !== 'active') {

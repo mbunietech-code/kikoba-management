@@ -1,8 +1,11 @@
 <?php
 
+use App\Models\Member;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Hash;
 
 if (! function_exists('t')) {
     /** Short translation helper for the ported dictionary. */
@@ -141,6 +144,34 @@ if (! function_exists('find_user_by_login')) {
     /** The user signing in with an e-mail address or a phone number in any common format. */
     function find_user_by_login(string $login): ?User
     {
-        return User::where('email', $login)->orWhereIn('phone', phone_variants($login))->first();
+        return find_users_by_login($login)->first();
+    }
+}
+
+if (! function_exists('find_users_by_login')) {
+    /**
+     * Every account a login could mean. An officer who is also a member has two:
+     * the staff account and a separate member-portal account reached through
+     * the member's phone number. For a phone number the member account comes first.
+     *
+     * @return Collection<int, User>
+     */
+    function find_users_by_login(string $login): Collection
+    {
+        $phones = phone_variants($login);
+        $memberUserIds = Member::whereIn('phone', $phones)->whereNotNull('user_id')->pluck('user_id');
+
+        return User::where('email', $login)->orWhereIn('phone', $phones)->orWhereIn('id', $memberUserIds)
+            ->with('roles')->get()
+            ->sortBy(fn (User $user) => $user->email === $login ? 0 : ($user->isStaff() ? 2 : 1))
+            ->values();
+    }
+}
+
+if (! function_exists('authenticate_login')) {
+    /** The account the login and password open — the password tells a staff account from a member one. */
+    function authenticate_login(string $login, string $password): ?User
+    {
+        return find_users_by_login($login)->first(fn (User $user) => Hash::check($password, $user->password));
     }
 }

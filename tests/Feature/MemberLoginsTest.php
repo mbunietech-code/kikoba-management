@@ -107,16 +107,42 @@ class MemberLoginsTest extends TestCase
         $this->get(route('member.home'))->assertOk();
     }
 
-    public function test_an_officer_who_is_also_a_member_keeps_their_staff_login(): void
+    public function test_an_officer_who_is_also_a_member_gets_a_separate_member_login(): void
     {
-        $officer = Member::factory()->create(['organization_id' => $this->organization->id, 'phone' => '0700000001']);
-        $passwordBefore = $this->admin->password;
+        $this->admin->update(['email' => 'mkuu@example.test', 'password' => 'staff-password-1']);
+        $officer = Member::factory()->create(['organization_id' => $this->organization->id, 'phone' => '0700000001', 'user_id' => $this->admin->id]);
 
         $this->post(route('admin.members.login', $officer));
+        $result = session('login_results')[0];
 
-        $this->assertSame('staff', session('login_results')[0]['status']);
-        $this->assertSame($this->admin->id, $officer->fresh()->user_id);
-        $this->assertSame($passwordBefore, $this->admin->fresh()->password);
+        $this->assertSame('created', $result['status']);
+        $this->assertSame('0700000001', $result['username']);
+        $memberUser = $officer->fresh()->user;
+        $this->assertNotSame($this->admin->id, $memberUser->id);
+        $this->assertTrue($memberUser->hasRole('member'));
+        $this->assertTrue(Hash::check('staff-password-1', $this->admin->fresh()->password));
+
+        // phone + member password opens the member portal
+        auth()->logout();
+        $this->post(route('login'), ['login' => '0700000001', 'password' => $result['password']])->assertRedirect(route('member.home'));
+        $this->assertAuthenticatedAs($memberUser);
+
+        // phone or e-mail + staff password still opens the admin side
+        foreach (['0700000001', 'mkuu@example.test'] as $login) {
+            $this->post(route('logout'));
+            $this->post(route('login'), ['login' => $login, 'password' => 'staff-password-1'])->assertRedirect(route('admin.dashboard'));
+            $this->assertAuthenticatedAs($this->admin);
+        }
+    }
+
+    public function test_the_mobile_app_signs_an_officer_into_their_member_account_with_the_member_password(): void
+    {
+        $officer = Member::factory()->create(['organization_id' => $this->organization->id, 'phone' => '0700000001']);
+        $this->post(route('admin.members.login', $officer));
+        $password = session('login_results')[0]['password'];
+
+        $this->postJson('/api/v1/auth/login', ['login' => '+255700000001', 'password' => $password])
+            ->assertOk()->assertJsonPath('data.user.id', $officer->fresh()->user_id);
     }
 
     public function test_bulk_send_covers_only_active_members_without_a_login(): void
@@ -124,8 +150,11 @@ class MemberLoginsTest extends TestCase
         Member::factory()->create(['organization_id' => $this->organization->id, 'phone' => '0716999888']);
         Member::factory()->create(['organization_id' => $this->organization->id, 'phone' => '0716555444', 'status' => 'suspended']);
 
+        // an officer linked only to their staff account still needs a member login
+        Member::factory()->create(['organization_id' => $this->organization->id, 'phone' => '0700000001', 'user_id' => $this->admin->id]);
+
         $this->post(route('admin.members.logins.missing'));
-        $this->assertCount(2, session('login_results'));
+        $this->assertCount(3, session('login_results'));
 
         $this->post(route('admin.members.logins.missing'));
         $this->assertCount(0, session('login_results'));

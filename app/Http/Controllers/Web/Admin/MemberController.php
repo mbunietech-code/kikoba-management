@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveMemberRequest;
 use App\Models\Member;
 use App\Models\SavingsAccount;
+use App\Models\User;
 use App\Services\MemberLoginService;
 use App\Support\Audit;
 use Illuminate\Http\RedirectResponse;
@@ -130,7 +131,9 @@ class MemberController extends Controller
     public function sendMissingLogins(Request $request, MemberLoginService $logins): RedirectResponse
     {
         $members = Member::where('organization_id', $request->user()->organization_id)
-            ->where('status', 'active')->whereNull('user_id')->orderBy('full_name')->get();
+            ->where('status', 'active')
+            ->where(fn ($q) => $q->whereNull('user_id')->orWhereNotIn('user_id', User::role('member')->select('id')))
+            ->orderBy('full_name')->get();
         $results = $members->map(fn (Member $m) => $logins->provision($request, $m))->all();
 
         return back()->with('login_results', $results)

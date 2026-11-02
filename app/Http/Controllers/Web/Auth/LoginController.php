@@ -3,10 +3,10 @@
 namespace App\Http\Controllers\Web\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Support\Timebox;
@@ -43,14 +43,12 @@ class LoginController extends Controller
         }
 
         RateLimiter::hit($key, 60);
-        $user = find_user_by_login($data['login']);
-
-        $valid = (new Timebox)->call(
-            fn (): bool => $user !== null && Hash::check($data['password'], $user->password),
+        $user = (new Timebox)->call(
+            fn (): ?User => authenticate_login($data['login'], $data['password']),
             200_000,
         );
 
-        if (! $valid || $user->status !== 'active') {
+        if (! $user || $user->status !== 'active') {
             throw ValidationException::withMessages(['login' => t('auth.badCredentials')]);
         }
 

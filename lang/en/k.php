@@ -812,7 +812,6 @@ return [
         'temporaryPassword' => 'Temporary password',
         'portalAccess' => 'Member portal access',
         'noLoginYet' => 'No login yet.',
-        'usesStaffLogin' => 'Uses their staff login.',
         'waitingFirstSignIn' => 'Details sent — has not signed in yet.',
         'lastSignIn' => 'Last signed in :when.',
         'send' => 'Create login & send',

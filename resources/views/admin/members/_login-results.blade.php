@@ -18,15 +18,14 @@
                                 <td class="py-1.5 pr-4 font-medium text-neutral-800">{{ $r['name'] }}</td>
                                 <td class="py-1.5 pr-4 font-mono">{{ $r['username'] }}</td>
                                 <td class="py-1.5 pr-4 font-mono">
-                                    @if ($r['status'] === 'staff') <span class="font-sans text-neutral-500">{{ t('memberLogin.usesStaffLogin') }}</span>
-                                    @elseif ($r['status'] === 'no_phone') <span class="font-sans text-red-700">{{ t('memberLogin.noPhone') }}</span>
+                                    @if ($r['status'] === 'no_phone') <span class="font-sans text-red-700">{{ t('memberLogin.noPhone') }}</span>
                                     @else {{ $r['password'] }} @endif
                                 </td>
                                 @foreach (['sms', 'email'] as $channel)
                                     <td class="py-1.5 pr-4">
                                         @if ($r[$channel] === true)<x-badge tone="success">{{ t('memberLogin.sent') }}</x-badge>
                                         @elseif ($r[$channel] === false)<x-badge tone="danger">{{ t('memberLogin.failed') }}</x-badge>
-                                        @else<span class="text-neutral-400">{{ in_array($r['status'], ['staff', 'no_phone']) ? '—' : t('memberLogin.notSent') }}</span>@endif
+                                        @else<span class="text-neutral-400">{{ $r['status'] === 'no_phone' ? '—' : t('memberLogin.notSent') }}</span>@endif
                                     </td>
                                 @endforeach
                             </tr>

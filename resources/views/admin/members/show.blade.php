@@ -31,18 +31,16 @@
             <div class="mt-4 border-t border-neutral-100 pt-4 text-left">
                 <p class="text-[12.5px] font-semibold text-neutral-700">{{ t('memberLogin.portalAccess') }}</p>
                 <p class="mt-1 text-[12.5px] text-neutral-500">
-                    @if (! $login) {{ t('memberLogin.noLoginYet') }}
-                    @elseif ($login->isStaff()) {{ t('memberLogin.usesStaffLogin') }}
+                    @if (! $login || $login->isStaff()) {{ t('memberLogin.noLoginYet') }}
                     @elseif ($login->must_change_password) {{ t('memberLogin.waitingFirstSignIn') }}
                     @else {{ t('memberLogin.lastSignIn', ['when' => $login->last_login_at?->diffForHumans() ?? t('users.never')]) }} @endif
                 </p>
                 @can('users.manage')
-                    @unless ($login?->isStaff())
-                        <form method="POST" action="{{ route('admin.members.login', $member) }}" class="mt-2"
-                              onsubmit="return confirm(@js($login ? t('memberLogin.resendConfirm') : t('memberLogin.sendConfirm')))">@csrf
-                            <button class="k-btn k-btn-outlined k-btn-sm w-full">{{ $login ? t('memberLogin.resend') : t('memberLogin.send') }}</button>
-                        </form>
-                    @endunless
+                    @php $hasPortalLogin = $login && ! $login->isStaff(); @endphp
+                    <form method="POST" action="{{ route('admin.members.login', $member) }}" class="mt-2"
+                          onsubmit="return confirm(@js($hasPortalLogin ? t('memberLogin.resendConfirm') : t('memberLogin.sendConfirm')))">@csrf
+                        <button class="k-btn k-btn-outlined k-btn-sm w-full">{{ $hasPortalLogin ? t('memberLogin.resend') : t('memberLogin.send') }}</button>
+                    </form>
                 @endcan
             </div>
         </x-card>

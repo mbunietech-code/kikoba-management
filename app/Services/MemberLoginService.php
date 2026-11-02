@@ -29,7 +29,8 @@ class MemberLoginService
     /**
      * Create the member's login, or give an existing member login a new temporary password.
      *
-     * Status is created, reset, staff (officer — keeps their own login) or no_phone.
+     * Status is created, reset or no_phone. An officer who is also a member gets a
+     * member login of their own, separate from their staff login.
      *
      * @return array{status: string, name: string, username: string, password: ?string, sms: ?bool, email: ?bool}
      */
@@ -46,11 +47,9 @@ class MemberLoginService
         $user ??= User::whereIn('phone', phone_variants((string) $member->phone))
             ->when(filled($member->email), fn ($q) => $q->orWhere('email', $member->email))->first();
 
-        // Officers who are also members keep using their staff login and password.
-        if ($user && $user->isStaff()) {
-            $member->update(['user_id' => $user->id]);
-
-            return ['status' => 'staff', 'username' => $user->phone ? $this->localPhone($user->phone) : $user->email] + $result;
+        // An officer who is also a member gets a separate portal login; the staff login stays for the admin side.
+        if ($user?->isStaff()) {
+            $user = null;
         }
 
         $password = $this->temporaryPassword();
@@ -60,13 +59,15 @@ class MemberLoginService
                 $user->update(['password' => $password, 'must_change_password' => true, 'status' => 'active']);
                 $result['status'] = 'reset';
             } else {
+                $phone = $this->internationalPhone((string) $member->phone);
                 $user = User::create([
                     'organization_id' => $member->organization_id,
                     'name' => $member->full_name,
-                    'email' => filled($member->email) && ! User::where('email', $member->email)->exists()
+                    'email' => filled($member->email) && ! User::withTrashed()->where('email', $member->email)->exists()
                         ? $member->email
                         : strtolower($member->member_number).'@members.invalid',
-                    'phone' => $this->internationalPhone((string) $member->phone),
+                    // A staff account may already hold the number; sign-in then finds this account through the member record.
+                    'phone' => User::withTrashed()->whereIn('phone', phone_variants($phone))->exists() ? null : $phone,
                     'password' => $password,
                     'must_change_password' => true,
                     'status' => 'active',
