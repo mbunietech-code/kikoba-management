@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Web\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Member;
 use App\Models\Project;
 use App\Models\ProjectInvestment;
 use App\Support\Audit;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class ProjectController extends Controller
 {
@@ -54,6 +54,12 @@ class ProjectController extends Controller
 
     public function destroy(Request $request, Project $project)
     {
+        if ($project->investments()->exists()) {
+            $project->update(['status' => 'cancelled']);
+            Audit::log($request, 'CANCEL_PROJECT', 'Project', $project->id);
+
+            return redirect()->route('admin.projects.show', $project)->with('toast', t('projects.cancelledInstead'));
+        }
         $project->delete();
         Audit::log($request, 'DELETE_PROJECT', 'Project', $project->id);
 
@@ -62,7 +68,13 @@ class ProjectController extends Controller
 
     public function invest(Request $request, Project $project)
     {
-        $data = $request->validate(['member_id' => ['required', 'exists:members,id'], 'amount' => ['required', 'integer', 'min:1']]);
+        if (! in_array($project->status, ['planned', 'active'], true)) {
+            return back()->with('toast', t('projects.closedForInvestment'))->with('toast_tone', 'error');
+        }
+        $data = $request->validate([
+            'member_id' => ['required', Rule::exists('members', 'id')->where('organization_id', $project->organization_id)],
+            'amount' => ['required', 'integer', 'min:1'],
+        ]);
         ProjectInvestment::create([
             'organization_id' => $project->organization_id, 'project_id' => $project->id,
             'member_id' => $data['member_id'], 'amount' => $data['amount'], 'status' => 'active',
@@ -77,15 +89,15 @@ class ProjectController extends Controller
     private function validated(Request $request): array
     {
         return $request->validate([
-            'name' => ['required', 'string'],
-            'description' => ['nullable', 'string'],
+            'name' => ['required', 'string', 'max:120'],
+            'description' => ['nullable', 'string', 'max:2000'],
             'type' => ['required', 'in:monthly,three_months,long_term,custom'],
             'capital_required' => ['required', 'integer', 'min:0'],
             'expected_profit' => ['nullable', 'integer', 'min:0'],
             'actual_profit' => ['nullable', 'integer', 'min:0'],
             'start_date' => ['nullable', 'date'],
-            'end_date' => ['nullable', 'date'],
-            'manager' => ['nullable', 'string'],
+            'end_date' => ['nullable', 'date', 'after_or_equal:start_date'],
+            'manager' => ['nullable', 'string', 'max:120'],
             'status' => ['required', 'in:planned,active,completed,cancelled'],
         ]);
     }

@@ -37,6 +37,7 @@ class Nav
                 ['route' => 'admin.payments.index', 'label' => 'nav.paymentsRepayments', 'icon' => 'wallet', 'can' => 'payments.view'],
                 ['route' => 'admin.accounting.index', 'label' => 'nav.accounting', 'icon' => 'calculator', 'can' => 'accounting.view'],
                 ['route' => 'admin.profit.index', 'label' => 'nav.profitDistribution', 'icon' => 'arrow-trending-up', 'can' => 'profit.view'],
+                ['route' => 'admin.projects.index', 'label' => 'nav.projects', 'icon' => 'briefcase', 'can' => 'projects.view'],
             ]],
             ['title' => 'nav.groupsAdmin', 'items' => [
                 ['route' => 'admin.reports.index', 'label' => 'nav.reports', 'icon' => 'chart-bar', 'can' => 'reports.view'],
@@ -68,6 +69,7 @@ class Nav
         if ($f['insurance'] ?? true) {
             $finance[] = ['route' => 'member.insurance', 'label' => 'nav.myInsurance', 'icon' => 'shield-check'];
         }
+        $finance[] = ['route' => 'member.projects', 'label' => 'nav.myProjects', 'icon' => 'briefcase'];
         $finance[] = ['route' => 'member.transactions', 'label' => 'nav.transactions', 'icon' => 'arrows-right-left'];
         $finance[] = ['route' => 'member.statements', 'label' => 'nav.statements', 'icon' => 'document-text'];
 

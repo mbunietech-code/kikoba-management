@@ -482,6 +482,8 @@ return [
         ],
     ],
     'projects' => [
+        'cancelledInstead' => 'Wanachama wamewekeza kwenye mradi huu, kwa hiyo umewekwa kuwa umesitishwa badala ya kufutwa.',
+        'closedForInvestment' => 'Miradi iliyopangwa au inayoendelea tu ndiyo hupokea uwekezaji mpya.',
         'title' => 'Miradi',
         'subtitle' => 'Miradi ya uwekezaji ya chama na mapato.',
         'addProject' => 'Ongeza mradi',
@@ -513,6 +515,14 @@ return [
         ],
     ],
     'insurance' => [
+        'markPaid' => 'Weka kuwa limelipwa',
+        'confirmReject' => 'Kataa dai hili?',
+        'confirmApprove' => 'Idhinisha dai hili kwa :amount?',
+        'confirmPaid' => 'Thibitisha :amount zimelipwa kwa mwanachama?',
+        'notActive' => 'Mwanachama huyu hana bima inayotumika.',
+        'claimNotOpen' => 'Dai hili limeshaamuliwa.',
+        'approvedAboveRequested' => 'Kiasi kilichoidhinishwa hakiwezi kuzidi kilichoombwa.',
+        'paidClaimLocked' => 'Dai lililolipwa haliwezi kuondolewa.',
         'title' => 'Bima / Mfuko wa ulinzi',
         'subtitle' => 'Michango ya wanachama, ulinzi na madai.',
         'planName' => 'Mpango',

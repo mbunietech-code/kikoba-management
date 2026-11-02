@@ -482,6 +482,8 @@ return [
         ],
     ],
     'projects' => [
+        'cancelledInstead' => 'Members have invested in this project, so it was marked cancelled instead of deleted.',
+        'closedForInvestment' => 'Only planned or active projects take new investment.',
         'title' => 'Projects',
         'subtitle' => 'Group investment projects and returns.',
         'addProject' => 'Add project',
@@ -513,6 +515,14 @@ return [
         ],
     ],
     'insurance' => [
+        'markPaid' => 'Mark paid',
+        'confirmReject' => 'Reject this claim?',
+        'confirmApprove' => 'Approve this claim for :amount?',
+        'confirmPaid' => 'Confirm :amount has been paid to the member?',
+        'notActive' => 'This member does not have active insurance cover.',
+        'claimNotOpen' => 'This claim has already been decided.',
+        'approvedAboveRequested' => 'The approved amount cannot be more than what was requested.',
+        'paidClaimLocked' => 'A paid claim cannot be removed.',
         'title' => 'Insurance / Protection fund',
         'subtitle' => 'Member contributions, coverage and claims.',
         'planName' => 'Plan',

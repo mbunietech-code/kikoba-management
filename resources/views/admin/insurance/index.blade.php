@@ -58,10 +58,17 @@
                                 <td class="px-2 py-2.5 text-right">{{ money($c->amount_requested) }}</td>
                                 <td class="px-2 py-2.5"><x-status :status="$c->status" :label="t('insurance.claimStatus.'.$c->status)" /></td>
                                 <td class="px-2 py-2.5 text-right">
-                                    @if (in_array($c->status, ['submitted','under_review']))
-                                        <form method="POST" action="{{ route('admin.insurance.claims.decide', $c) }}" class="inline"><input type="hidden" name="decision" value="approve">@csrf<button class="k-btn k-btn-primary k-btn-sm">{{ t('common.approve') }}</button></form>
-                                    @endif
-                                    <x-row-actions :delete="route('admin.insurance.claims.destroy', $c)" />
+                                    @can('insurance.manage')
+                                        <div class="flex items-center justify-end gap-1">
+                                            @if (in_array($c->status, ['submitted','under_review']))
+                                                <form method="POST" action="{{ route('admin.insurance.claims.decide', $c) }}" onsubmit="return confirm(@js(t('insurance.confirmReject')))"><input type="hidden" name="decision" value="reject">@csrf<button class="k-btn k-btn-outlined k-btn-sm">{{ t('common.reject') }}</button></form>
+                                                <form method="POST" action="{{ route('admin.insurance.claims.decide', $c) }}" onsubmit="return confirm(@js(t('insurance.confirmApprove', ['amount' => money($c->amount_requested)])))"><input type="hidden" name="decision" value="approve">@csrf<button class="k-btn k-btn-primary k-btn-sm">{{ t('common.approve') }}</button></form>
+                                            @elseif ($c->status === 'approved')
+                                                <form method="POST" action="{{ route('admin.insurance.claims.decide', $c) }}" onsubmit="return confirm(@js(t('insurance.confirmPaid', ['amount' => money($c->amount_approved)])))"><input type="hidden" name="decision" value="pay">@csrf<button class="k-btn k-btn-primary k-btn-sm">{{ t('insurance.markPaid') }}</button></form>
+                                            @endif
+                                            @if ($c->status !== 'paid')<x-row-actions :delete="route('admin.insurance.claims.destroy', $c)" :deleteLabel="t('common.cancel')" />@endif
+                                        </div>
+                                    @endcan
                                 </td>
                             </tr>
                         @endforeach
