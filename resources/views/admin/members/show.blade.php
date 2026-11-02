@@ -11,6 +11,7 @@
     @include('admin.members._login-results')
 
     <div class="grid gap-4 lg:grid-cols-[300px_1fr]">
+        <div class="grid content-start gap-4">
         <x-card>
             <div class="flex flex-col items-center text-center">
                 @if ($member->photo_path)
@@ -45,6 +46,30 @@
                 @endcan
             </div>
         </x-card>
+
+        <x-card>
+            <p class="text-[12.5px] font-semibold text-neutral-700">{{ t('members.nextOfKin') }}</p>
+            @if ($member->next_of_kin)
+                <div class="mt-3 flex items-center gap-3">
+                    @if ($member->next_of_kin_photo_path)
+                        <img src="{{ route('admin.members.kin-photo', $member) }}" alt="{{ $member->next_of_kin }}" class="h-14 w-14 shrink-0 rounded-xl object-cover">
+                    @else
+                        <x-avatar :name="$member->next_of_kin" color="#64748b" />
+                    @endif
+                    <div class="min-w-0">
+                        <p class="truncate text-[14px] font-semibold text-neutral-900">{{ $member->next_of_kin }}</p>
+                        <p class="text-[12.5px] text-neutral-500">{{ $member->next_of_kin_relationship ?: '—' }}</p>
+                    </div>
+                </div>
+                <div class="mt-3 space-y-2 text-[13px] text-neutral-600">
+                    <p class="flex items-center gap-2"><x-heroicon-o-phone class="h-4 w-4 shrink-0 text-neutral-400" /> {{ $member->next_of_kin_phone ?: '—' }}</p>
+                    <p class="flex items-center gap-2"><x-heroicon-o-map-pin class="h-4 w-4 shrink-0 text-neutral-400" /> {{ $member->next_of_kin_address ?: '—' }}</p>
+                </div>
+            @else
+                <p class="mt-1 text-[12.5px] text-neutral-500">{{ t('members.noNextOfKin') }}</p>
+            @endif
+        </x-card>
+        </div>
 
         <div class="min-w-0">
             <div class="grid gap-3 sm:grid-cols-3">
@@ -83,9 +108,6 @@
                             ['label' => t('members.occupation'), 'value' => e($member->occupation ?: '—')],
                             ['label' => t('members.employer'), 'value' => e($member->employer ?: '—')],
                             ['label' => t('members.communityGroup'), 'value' => e($member->community_group ?: '—')],
-                            ['label' => t('members.nextOfKin'), 'value' => e(collect([$member->next_of_kin, $member->next_of_kin_phone])->filter()->implode(' · ') ?: '—')],
-                            ['label' => t('members.kinRelationship'), 'value' => e($member->next_of_kin_relationship ?: '—')],
-                            ['label' => t('members.kinAddress'), 'value' => e($member->next_of_kin_address ?: '—')],
                             ['label' => t('members.savingsAccountNumber'), 'value' => $member->savingsAccount?->account_number ?? '—'],
                             ['label' => t('common.email'), 'value' => e($member->email ?: '—')],
                         ]" />

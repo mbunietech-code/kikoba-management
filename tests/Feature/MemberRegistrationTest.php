@@ -142,6 +142,33 @@ class MemberRegistrationTest extends TestCase
         Storage::disk('local')->assertMissing($path);
     }
 
+    public function test_next_of_kin_gets_a_private_photo_and_its_own_card_on_the_profile(): void
+    {
+        $png = fn () => UploadedFile::fake()->createWithContent('kin.png', base64_decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aGxkAAAAASUVORK5CYII='));
+        $this->get(route('admin.members.create'))->assertSee('name="kin_photo"', false);
+
+        $this->post(route('admin.members.store'), [...$this->details(), 'kin_photo' => $png()])->assertSessionHasNoErrors();
+        $member = Member::firstOrFail();
+        $path = $member->next_of_kin_photo_path;
+        Storage::disk('local')->assertExists($path);
+        $this->assertNull($member->photo_path, 'the member photo is untouched');
+        $this->assertArrayNotHasKey('next_of_kin_photo_path', $member->toArray());
+
+        $this->get(route('admin.members.show', $member))->assertOk()
+            ->assertSee(route('admin.members.kin-photo', $member))
+            ->assertSeeInOrder([t('members.nextOfKin'), $member->next_of_kin, 'Sibling']);
+        $this->get(route('admin.members.kin-photo', $member))->assertOk()->assertHeader('X-Content-Type-Options', 'nosniff');
+
+        $this->put(route('admin.members.update', $member), [...$this->details(), 'kin_photo' => $png()])->assertSessionHasNoErrors();
+        Storage::disk('local')->assertMissing($path);
+        $replaced = $member->fresh()->next_of_kin_photo_path;
+
+        $this->put(route('admin.members.update', $member), [...$this->details(), 'remove_kin_photo' => '1'])->assertSessionHasNoErrors();
+        $this->assertNull($member->fresh()->next_of_kin_photo_path);
+        Storage::disk('local')->assertMissing($replaced);
+        $this->get(route('admin.members.kin-photo', $member))->assertNotFound();
+    }
+
     public function test_invalid_uploads_are_rejected_before_any_record_is_written(): void
     {
         foreach ([UploadedFile::fake()->create('script.php', 1, 'text/plain'), UploadedFile::fake()->create('big.jpg', 2049, 'image/jpeg')] as $photo) {

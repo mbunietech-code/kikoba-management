@@ -62,6 +62,8 @@ class SaveMemberRequest extends FormRequest
             'status' => ['required', Rule::in(['pending', 'active', 'suspended', 'inactive', 'deceased'])],
             'photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
             'remove_photo' => ['sometimes', 'boolean'],
+            'kin_photo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp', 'max:2048'],
+            'remove_kin_photo' => ['sometimes', 'boolean'],
         ];
     }
 

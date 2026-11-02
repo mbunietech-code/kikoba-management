@@ -269,6 +269,8 @@ return [
         'photo' => 'Picha ya mwanachama',
         'photoHint' => 'JPG, PNG au WebP. Ukubwa usizidi MB 2.',
         'removePhoto' => 'Ondoa picha iliyopo',
+        'kinPhoto' => 'Picha ya ndugu wa karibu',
+        'noNextOfKin' => 'Bado hakuna ndugu wa karibu aliyewekwa.',
         'title' => 'Wanachama',
         'subtitle' => 'Sajili na simamia uanachama wa chama.',
         'addMember' => 'Ongeza mwanachama',

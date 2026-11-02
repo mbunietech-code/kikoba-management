@@ -140,9 +140,22 @@ class MemberController extends Controller
     public function photo(Request $request, Member $member): StreamedResponse
     {
         $this->ensureOrganization($request, $member);
-        abort_unless($member->photo_path && Storage::disk('local')->exists($member->photo_path), 404);
 
-        return Storage::disk('local')->response($member->photo_path, null, [
+        return $this->privateImage($member->photo_path);
+    }
+
+    public function kinPhoto(Request $request, Member $member): StreamedResponse
+    {
+        $this->ensureOrganization($request, $member);
+
+        return $this->privateImage($member->next_of_kin_photo_path);
+    }
+
+    private function privateImage(?string $path): StreamedResponse
+    {
+        abort_unless($path && Storage::disk('local')->exists($path), 404);
+
+        return Storage::disk('local')->response($path, null, [
             'Cache-Control' => 'private, no-store',
             'X-Content-Type-Options' => 'nosniff',
         ]);
@@ -153,21 +166,36 @@ class MemberController extends Controller
         abort_unless($member->organization_id === $request->user()->organization_id, 404);
     }
 
+    /**
+     * Uploaded image field => [remove checkbox, column].
+     *
+     * @var array<string, array{0: string, 1: string}>
+     */
+    private const PHOTOS = [
+        'photo' => ['remove_photo', 'photo_path'],
+        'kin_photo' => ['remove_kin_photo', 'next_of_kin_photo_path'],
+    ];
+
     /** @param array<string, mixed> $data */
     private function persist(SaveMemberRequest $request, Member $member, array $data, string $action): Member
     {
-        $oldPhoto = $member->photo_path;
-        $newPhoto = null;
-        unset($data['photo'], $data['remove_photo']);
+        $oldPhotos = [];
+        $newPhotos = [];
 
-        if ($request->hasFile('photo')) {
-            $newPhoto = $request->file('photo')->store('member-photos/'.$request->user()->organization_id, 'local');
-            if (! $newPhoto) {
-                throw new RuntimeException('Unable to store member photo.');
+        foreach (self::PHOTOS as $input => [$removeFlag, $column]) {
+            unset($data[$input], $data[$removeFlag]);
+            $oldPhotos[$column] = $member->$column;
+
+            if ($request->hasFile($input)) {
+                $stored = $request->file($input)->store('member-photos/'.$request->user()->organization_id, 'local');
+                if (! $stored) {
+                    Storage::disk('local')->delete($newPhotos);
+                    throw new RuntimeException('Unable to store member photo.');
+                }
+                $data[$column] = $newPhotos[] = $stored;
+            } elseif ($request->boolean($removeFlag)) {
+                $data[$column] = null;
             }
-            $data['photo_path'] = $newPhoto;
-        } elseif ($request->boolean('remove_photo')) {
-            $data['photo_path'] = null;
         }
 
         try {
@@ -176,14 +204,14 @@ class MemberController extends Controller
                 Audit::log($request, $action, 'Member', $member->id);
             });
         } catch (Throwable $exception) {
-            if ($newPhoto) {
-                Storage::disk('local')->delete($newPhoto);
-            }
+            Storage::disk('local')->delete($newPhotos);
             throw $exception;
         }
 
-        if ($oldPhoto && $oldPhoto !== $member->photo_path) {
-            Storage::disk('local')->delete($oldPhoto);
+        foreach ($oldPhotos as $column => $oldPhoto) {
+            if ($oldPhoto && $oldPhoto !== $member->$column) {
+                Storage::disk('local')->delete($oldPhoto);
+            }
         }
 
         return $member;

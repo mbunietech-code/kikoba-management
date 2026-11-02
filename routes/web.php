@@ -45,6 +45,7 @@ Route::middleware(['auth', EnsurePasswordChanged::class, EnsureStaff::class])->p
         Route::get('/{member}', 'show')->name('show')->can('members.view');
         Route::get('/{member}/edit', 'edit')->name('edit')->can('members.update');
         Route::get('/{member}/photo', 'photo')->name('photo')->can('members.view');
+        Route::get('/{member}/kin-photo', 'kinPhoto')->name('kin-photo')->can('members.view');
         Route::put('/{member}', 'update')->name('update')->can('members.update');
         Route::delete('/{member}', 'destroy')->name('destroy')->can('members.delete');
         Route::post('/{member}/login', 'sendLogin')->name('login')->can('users.manage');

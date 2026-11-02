@@ -269,6 +269,8 @@ return [
         'photo' => 'Member photo',
         'photoHint' => 'JPG, PNG or WebP. Maximum 2 MB.',
         'removePhoto' => 'Remove current photo',
+        'kinPhoto' => 'Next of kin photo',
+        'noNextOfKin' => 'No next of kin recorded yet.',
         'title' => 'Members',
         'subtitle' => 'Register and manage group membership.',
         'addMember' => 'Add member',

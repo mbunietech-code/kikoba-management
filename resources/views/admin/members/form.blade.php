@@ -93,6 +93,14 @@
                     <x-field :label="t('members.nextOfKinPhone')" name="next_of_kin_phone"><x-input type="tel" name="next_of_kin_phone" :value="old('next_of_kin_phone', $member->next_of_kin_phone)" maxlength="20" /></x-field>
                     <x-field :label="t('members.kinRelationship')" name="next_of_kin_relationship"><x-input name="next_of_kin_relationship" :value="old('next_of_kin_relationship', $member->next_of_kin_relationship)" maxlength="100" /></x-field>
                     <x-field :label="t('members.kinAddress')" name="next_of_kin_address"><x-input name="next_of_kin_address" :value="old('next_of_kin_address', $member->next_of_kin_address)" maxlength="191" /></x-field>
+                    <div>
+                        @if ($member->next_of_kin_photo_path)
+                            <img src="{{ route('admin.members.kin-photo', $member) }}" alt="{{ $member->next_of_kin }}" class="mb-3 h-20 w-20 rounded-xl object-cover">
+                            <label class="mb-3 flex items-center gap-2 text-sm"><input type="checkbox" name="remove_kin_photo" value="1" @checked(old('remove_kin_photo'))> {{ t('members.removePhoto') }}</label>
+                        @endif
+                        <x-field :label="t('members.kinPhoto')" name="kin_photo"><input type="file" name="kin_photo" accept="image/jpeg,image/png,image/webp" class="block w-full text-sm" aria-describedby="kin-photo-hint"></x-field>
+                        <p id="kin-photo-hint" class="mt-2 text-xs text-neutral-500">{{ t('members.photoHint') }}</p>
+                    </div>
                 </div>
                 <div x-ref="kinList">
                     <template x-for="(kin, index) in kins" :key="kin._key">
