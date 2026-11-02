@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToOrganization;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
@@ -11,19 +12,26 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Member extends BaseModel
 {
-    use BelongsToOrganization, HasUuids, SoftDeletes;
+    use BelongsToOrganization, HasFactory, HasUuids, SoftDeletes;
 
     protected $fillable = [
         'organization_id', 'user_id', 'member_number', 'full_name', 'phone', 'email',
         'date_of_birth', 'gender', 'address', 'community_group', 'next_of_kin', 'next_of_kin_phone',
         'registration_date', 'status', 'avatar_color',
+        'nida_number', 'nationality', 'marital_status', 'alternative_phone',
+        'region', 'district', 'ward', 'street', 'occupation', 'employer',
+        'next_of_kin_relationship', 'next_of_kin_address', 'photo_path',
+        'additional_next_of_kin',
     ];
+
+    protected $hidden = ['nida_number', 'photo_path', 'additional_next_of_kin'];
 
     protected function casts(): array
     {
         return [
             'date_of_birth' => 'date',
             'registration_date' => 'date',
+            'additional_next_of_kin' => 'array',
         ];
     }
 

@@ -1,8 +1,9 @@
 <?php
 
-use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\Admin;
+use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\Member;
+use App\Http\Middleware\AuthResponseHeaders;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route(
@@ -18,11 +19,10 @@ Route::get('/locale/{lang}', function (string $lang) {
 })->name('locale');
 
 /* --------------------------------- auth --------------------------------- */
-Route::middleware('guest')->group(function () {
+Route::middleware(['guest', AuthResponseHeaders::class])->group(function () {
     Route::get('/login', [LoginController::class, 'show'])->name('login');
-    Route::post('/login', [LoginController::class, 'login']);
-    Route::get('/verify-otp', [LoginController::class, 'showOtp'])->name('verify-otp');
-    Route::post('/verify-otp', [LoginController::class, 'verifyOtp']);
+    Route::post('/login', [LoginController::class, 'login'])->middleware('throttle:30,1,web-login');
+    Route::match(['get', 'post'], '/verify-otp', fn () => redirect()->route('login'))->name('verify-otp');
     Route::get('/forgot-password', [LoginController::class, 'forgot'])->name('forgot');
     Route::post('/forgot-password', fn () => back()->with('status', 'If the email exists, a reset link has been sent.'));
 });
@@ -38,6 +38,7 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         Route::post('/', 'store')->name('store')->can('members.create');
         Route::get('/{member}', 'show')->name('show')->can('members.view');
         Route::get('/{member}/edit', 'edit')->name('edit')->can('members.update');
+        Route::get('/{member}/photo', 'photo')->name('photo')->can('members.view');
         Route::put('/{member}', 'update')->name('update')->can('members.update');
         Route::delete('/{member}', 'destroy')->name('destroy')->can('members.delete');
     });

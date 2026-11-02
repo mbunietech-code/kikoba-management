@@ -3,9 +3,17 @@
 namespace App\Http\Controllers\Web\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SaveMemberRequest;
 use App\Models\Member;
 use App\Support\Audit;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\View\View;
+use RuntimeException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
+use Throwable;
 
 class MemberController extends Controller
 {
@@ -29,16 +37,20 @@ class MemberController extends Controller
 
     public function create()
     {
-        return view('admin.members.form', ['member' => new Member()]);
+        return view('admin.members.form', ['member' => new Member]);
     }
 
-    public function edit(Member $member)
+    public function edit(Request $request, Member $member): View
     {
+        $this->ensureOrganization($request, $member);
+
         return view('admin.members.form', compact('member'));
     }
 
-    public function show(Request $request, Member $member)
+    public function show(Request $request, Member $member): View
     {
+        $this->ensureOrganization($request, $member);
+
         $member->load([
             'shares', 'savingsAccount', 'loans.product', 'insuranceAccount',
             'guaranteeing.loan', 'transactions' => fn ($q) => $q->latest()->limit(40),
@@ -49,25 +61,25 @@ class MemberController extends Controller
         return view('admin.members.show', compact('member', 'tab'));
     }
 
-    public function store(Request $request)
+    public function store(SaveMemberRequest $request): RedirectResponse
     {
-        $data = $this->validated($request);
-        $orgId = app('kikoba.org')->id;
+        $data = $request->validated();
+        $orgId = $request->user()->organization_id;
         $data['organization_id'] = $orgId;
         $data['member_number'] = $this->nextMemberNumber($orgId);
-        $data['registration_date'] = now()->toDateString();
+        $data['registration_date'] = $data['registration_date'] ?? now()->toDateString();
         $data['avatar_color'] = '#'.substr(md5($data['full_name']), 0, 6);
 
-        $member = Member::create($data);
-        Audit::log($request, 'CREATE_MEMBER', 'Member', $member->id);
+        $member = $this->persist($request, new Member, $data, 'CREATE_MEMBER');
 
         return redirect()->route('admin.members.show', $member)->with('toast', t('members.addMember').' ✓');
     }
 
-    public function update(Request $request, Member $member)
+    public function update(SaveMemberRequest $request, Member $member): RedirectResponse
     {
-        $member->update($this->validated($request));
-        Audit::log($request, 'UPDATE_MEMBER', 'Member', $member->id);
+        $data = $request->validated();
+        $data['registration_date'] = $data['registration_date'] ?? $member->registration_date?->toDateString();
+        $this->persist($request, $member, $data, 'UPDATE_MEMBER');
 
         return redirect()->route('admin.members.show', $member)->with('toast', t('common.saveChanges').' ✓');
     }
@@ -113,19 +125,55 @@ class MemberController extends Controller
         return 'MBR-'.str_pad((string) ($max + 1), 6, '0', STR_PAD_LEFT);
     }
 
-    private function validated(Request $request): array
+    public function photo(Request $request, Member $member): StreamedResponse
     {
-        return $request->validate([
-            'full_name' => ['required', 'string', 'max:150'],
-            'phone' => ['required', 'string', 'max:20'],
-            'email' => ['nullable', 'email'],
-            'gender' => ['nullable', 'in:male,female'],
-            'date_of_birth' => ['nullable', 'date'],
-            'address' => ['nullable', 'string'],
-            'community_group' => ['nullable', 'string', 'max:120'],
-            'next_of_kin' => ['nullable', 'string'],
-            'next_of_kin_phone' => ['nullable', 'string'],
-            'status' => ['required', 'in:pending,active,suspended,inactive,deceased'],
+        $this->ensureOrganization($request, $member);
+        abort_unless($member->photo_path && Storage::disk('local')->exists($member->photo_path), 404);
+
+        return Storage::disk('local')->response($member->photo_path, null, [
+            'Cache-Control' => 'private, no-store',
+            'X-Content-Type-Options' => 'nosniff',
         ]);
+    }
+
+    private function ensureOrganization(Request $request, Member $member): void
+    {
+        abort_unless($member->organization_id === $request->user()->organization_id, 404);
+    }
+
+    /** @param array<string, mixed> $data */
+    private function persist(SaveMemberRequest $request, Member $member, array $data, string $action): Member
+    {
+        $oldPhoto = $member->photo_path;
+        $newPhoto = null;
+        unset($data['photo'], $data['remove_photo']);
+
+        if ($request->hasFile('photo')) {
+            $newPhoto = $request->file('photo')->store('member-photos/'.$request->user()->organization_id, 'local');
+            if (! $newPhoto) {
+                throw new RuntimeException('Unable to store member photo.');
+            }
+            $data['photo_path'] = $newPhoto;
+        } elseif ($request->boolean('remove_photo')) {
+            $data['photo_path'] = null;
+        }
+
+        try {
+            DB::transaction(function () use ($request, $member, $data, $action): void {
+                $member->fill($data)->save();
+                Audit::log($request, $action, 'Member', $member->id);
+            });
+        } catch (Throwable $exception) {
+            if ($newPhoto) {
+                Storage::disk('local')->delete($newPhoto);
+            }
+            throw $exception;
+        }
+
+        if ($oldPhoto && $oldPhoto !== $member->photo_path) {
+            Storage::disk('local')->delete($oldPhoto);
+        }
+
+        return $member;
     }
 }

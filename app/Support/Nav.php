@@ -33,10 +33,8 @@ class Nav
             ['title' => 'nav.groupsFinance', 'items' => [
                 ['route' => 'admin.savings.index', 'label' => 'nav.savings', 'icon' => 'banknotes', 'can' => 'savings.view'],
                 ['route' => 'admin.loans.index', 'label' => 'nav.loans', 'icon' => 'credit-card', 'can' => 'loans.view'],
-                ['route' => 'admin.products.index', 'label' => 'nav.loanProducts', 'icon' => 'rectangle-stack', 'can' => 'products.view'],
                 ['route' => 'admin.guarantors.index', 'label' => 'nav.guarantors', 'icon' => 'user-group', 'can' => 'guarantors.view'],
-                ['route' => 'admin.projects.index', 'label' => 'nav.projects', 'icon' => 'briefcase', 'can' => 'projects.view'],
-                ['route' => 'admin.payments.index', 'label' => 'nav.payments', 'icon' => 'wallet', 'can' => 'payments.view'],
+                ['route' => 'admin.payments.index', 'label' => 'nav.paymentsRepayments', 'icon' => 'wallet', 'can' => 'payments.view'],
                 ['route' => 'admin.accounting.index', 'label' => 'nav.accounting', 'icon' => 'calculator', 'can' => 'accounting.view'],
                 ['route' => 'admin.profit.index', 'label' => 'nav.profitDistribution', 'icon' => 'arrow-trending-up', 'can' => 'profit.view'],
             ]],
@@ -66,9 +64,7 @@ class Nav
         $main[] = ['route' => 'member.loans', 'label' => 'nav.myLoans', 'icon' => 'credit-card'];
         $main[] = ['route' => 'member.repayments', 'label' => 'nav.repayments', 'icon' => 'wallet'];
 
-        $finance = [
-            ['route' => 'member.projects', 'label' => 'nav.myProjects', 'icon' => 'briefcase'],
-        ];
+        $finance = [];
         if ($f['insurance'] ?? true) {
             $finance[] = ['route' => 'member.insurance', 'label' => 'nav.myInsurance', 'icon' => 'shield-check'];
         }

@@ -9,7 +9,11 @@
     <div class="grid gap-4 lg:grid-cols-[300px_1fr]">
         <x-card>
             <div class="flex flex-col items-center text-center">
-                <x-avatar :name="$member->full_name" :color="$member->avatar_color" size="lg" />
+                @if ($member->photo_path)
+                    <img src="{{ route('admin.members.photo', $member) }}" alt="{{ $member->full_name }}" class="h-24 w-24 rounded-xl object-cover">
+                @else
+                    <x-avatar :name="$member->full_name" :color="$member->avatar_color" size="lg" />
+                @endif
                 <p class="mt-3 font-display text-lg font-bold text-neutral-900">{{ $member->full_name }}</p>
                 <x-status :status="$member->status" :label="t('members.status.'.$member->status)" />
                 <div class="mt-4 w-full space-y-2 text-left text-[13px] text-neutral-600">
@@ -43,13 +47,36 @@
                             ['label' => t('members.memberNumber'), 'value' => $member->member_number],
                             ['label' => t('members.gender'), 'value' => $member->gender ? t('members.'.$member->gender) : '—'],
                             ['label' => t('members.dob'), 'value' => fdate($member->date_of_birth)],
+                            ['label' => t('members.nidaNumber'), 'value' => e($member->nida_number ?: '—')],
+                            ['label' => t('members.nationality'), 'value' => e($member->nationality ?: '—')],
+                            ['label' => t('members.maritalStatus'), 'value' => $member->marital_status ? t('members.maritalOptions.'.$member->marital_status) : '—'],
+                            ['label' => t('members.alternativePhone'), 'value' => e($member->alternative_phone ?: '—')],
                             ['label' => t('members.registrationDate'), 'value' => fdate($member->registration_date)],
                             ['label' => t('members.address'), 'value' => e($member->address ?: '—')],
+                            ['label' => t('members.region'), 'value' => e($member->region ?: '—')],
+                            ['label' => t('members.district'), 'value' => e($member->district ?: '—')],
+                            ['label' => t('members.ward'), 'value' => e($member->ward ?: '—')],
+                            ['label' => t('members.street'), 'value' => e($member->street ?: '—')],
+                            ['label' => t('members.occupation'), 'value' => e($member->occupation ?: '—')],
+                            ['label' => t('members.employer'), 'value' => e($member->employer ?: '—')],
                             ['label' => t('members.communityGroup'), 'value' => e($member->community_group ?: '—')],
                             ['label' => t('members.nextOfKin'), 'value' => e(($member->next_of_kin ?: '—').' · '.$member->next_of_kin_phone)],
+                            ['label' => t('members.kinRelationship'), 'value' => e($member->next_of_kin_relationship ?: '—')],
+                            ['label' => t('members.kinAddress'), 'value' => e($member->next_of_kin_address ?: '—')],
                             ['label' => t('savings.accountNumber'), 'value' => $member->savingsAccount?->account_number ?? '—'],
                             ['label' => t('common.email'), 'value' => e($member->email ?: '—')],
                         ]" />
+                        @foreach ($member->additional_next_of_kin ?? [] as $index => $kin)
+                            <div class="mt-4 border-t border-neutral-200 pt-4">
+                                <h3 class="mb-3 text-sm font-semibold">{{ t('members.nextOfKin') }} {{ $index + 2 }}</h3>
+                                <x-kv :items="[
+                                    ['label' => t('common.name'), 'value' => e($kin['name'] ?? '—')],
+                                    ['label' => t('members.nextOfKinPhone'), 'value' => e($kin['phone'] ?? '—')],
+                                    ['label' => t('members.kinRelationship'), 'value' => e($kin['relationship'] ?? '—')],
+                                    ['label' => t('members.kinAddress'), 'value' => e($kin['address'] ?? '—')],
+                                ]" />
+                            </div>
+                        @endforeach
                     @elseif ($tab === 'shares')
                         <x-mini-table :head="[t('common.reference'), t('shares.quantity'), t('shares.pricePerShare'), t('shares.totalValue'), t('shares.purchasedAt')]"
                             :rows="$member->shares->map(fn($s) => [$s->transaction_reference, num($s->quantity), money($s->price_per_share), money($s->total_value), fdate($s->purchased_at)])" />
