@@ -14,6 +14,16 @@
                 <x-badge :tone="$smsReady ? 'success' : 'neutral'" dot>{{ $smsReady ? t('messaging.ready') : t('messaging.notReady') }}</x-badge>
             </div>
             <div class="grid gap-4 p-4 sm:grid-cols-2">
+                @if ($smsReady)
+                    <div class="flex items-center justify-between gap-3 rounded-md bg-neutral-50 px-3 py-2.5 sm:col-span-2">
+                        <span class="flex items-center gap-2 text-[13px] text-neutral-600"><x-heroicon-o-chat-bubble-left-right class="h-4 w-4 text-neutral-400" aria-hidden="true" /> {{ t('messaging.smsBalance') }}</span>
+                        @if ($smsBalance !== null)
+                            <span class="font-display text-lg font-semibold {{ $smsBalance < 50 ? 'text-red-600' : 'text-neutral-900' }}">{{ number_format($smsBalance) }} <span class="text-[12px] font-normal text-neutral-500">SMS</span></span>
+                        @else
+                            <span class="text-[12.5px] text-red-600">{{ t('messaging.balanceUnavailable') }}</span>
+                        @endif
+                    </div>
+                @endif
                 <label class="flex items-center gap-2 text-[13.5px] sm:col-span-2">
                     <input type="hidden" name="sms_enabled" value="0">
                     <input type="checkbox" name="sms_enabled" value="1" @checked(($messaging['sms_enabled'] ?? '0') === '1') class="h-4 w-4 accent-[var(--color-primary-800)]">

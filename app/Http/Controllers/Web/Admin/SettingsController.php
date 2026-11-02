@@ -21,8 +21,14 @@ class SettingsController extends Controller
         $config = Setting::where('organization_id', $org->id)->pluck('value', 'key');
 
         $messaging = app(MessagingSettings::class);
+        $smsBalance = null;
+        if ($tab === 'messaging' && $messaging->smsReady($org->id)) {
+            $messaging->apply($org->id);
+            $smsBalance = app(BeemSmsService::class)->balance();
+        }
 
         return view('admin.settings.index', [
+            'smsBalance' => $smsBalance,
             'tab' => $tab,
             'org' => $org,
             'config' => $config,

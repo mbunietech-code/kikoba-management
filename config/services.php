@@ -40,6 +40,7 @@ return [
         'secret' => env('BEEM_SECRET_KEY'),
         'sender_id' => env('BEEM_SENDER_ID', 'INFO'),
         'sms_url' => env('BEEM_SMS_URL', 'https://apisms.beem.africa/v1/send'),
+        'balance_url' => env('BEEM_BALANCE_URL', 'https://apisms.beem.africa/public/v1/vendors/balance'),
         'enabled' => env('SMS_ENABLED', false),
     ],
 

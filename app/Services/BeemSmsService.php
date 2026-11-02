@@ -51,6 +51,37 @@ class BeemSmsService
         }
     }
 
+    /**
+     * SMS credits left on the Beem account, or null when SMS is not set up
+     * or Beem could not be reached.
+     */
+    public function balance(): ?float
+    {
+        $cfg = config('services.beem');
+
+        if (! $cfg['enabled'] || empty($cfg['key']) || empty($cfg['secret'])) {
+            return null;
+        }
+
+        try {
+            $response = Http::withBasicAuth($cfg['key'], $cfg['secret'])
+                ->acceptJson()
+                ->timeout(8)
+                ->get($cfg['balance_url']);
+            $credits = $response->json('data.credit_balance');
+
+            if ($response->successful() && is_numeric($credits)) {
+                return (float) $credits;
+            }
+
+            Log::warning('Beem balance failed', ['status' => $response->status(), 'body' => $response->body()]);
+        } catch (\Throwable $e) {
+            Log::error('Beem balance exception', ['message' => $e->getMessage()]);
+        }
+
+        return null;
+    }
+
     private function normalise(string $phone): string
     {
         $p = preg_replace('/\D+/', '', $phone);

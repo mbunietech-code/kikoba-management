@@ -865,6 +865,8 @@ return [
         'testEmailText' => ':org: barua pepe ya majaribio kutoka mfumo wa kikundi. Barua pepe inafanya kazi.',
         'testEmailSent' => 'Barua pepe ya majaribio imetumwa. Angalia inbox (na spam).',
         'testFailed' => 'Imeshindwa kutuma — hakiki taarifa.',
+        'smsBalance' => 'Salio la SMS (Beem)',
+        'balanceUnavailable' => 'Imeshindwa kupata salio kutoka Beem — hakiki funguo.',
     ],
     'settings' => [
         'sharePriceHint' => 'Bei inayopendekezwa unaporekodi ununuzi wa hisa',

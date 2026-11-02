@@ -865,6 +865,8 @@ return [
         'testEmailText' => ':org: test e-mail from the group system. E-mail is working.',
         'testEmailSent' => 'Test e-mail sent. Check the inbox (and spam).',
         'testFailed' => 'Sending failed — check the details.',
+        'smsBalance' => 'SMS balance (Beem)',
+        'balanceUnavailable' => 'Could not get the balance from Beem — check the keys.',
     ],
     'settings' => [
         'sharePriceHint' => 'Suggested price when recording a share purchase',

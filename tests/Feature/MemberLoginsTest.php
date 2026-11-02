@@ -53,6 +53,25 @@ class MemberLoginsTest extends TestCase
         $this->assertSame($stored, Setting::where('key', 'beem_secret_key')->value('value'));
     }
 
+    public function test_the_messaging_tab_shows_the_beem_sms_balance(): void
+    {
+        Http::fake(['*vendors/balance*' => Http::response(['data' => ['credit_balance' => 1250]])]);
+        $this->put(route('admin.settings.messaging'), $this->messaging());
+
+        $this->get(route('admin.settings.index', ['tab' => 'messaging']))->assertOk()
+            ->assertSee(t('messaging.smsBalance'))->assertSee('1,250');
+        Http::assertSent(fn ($request) => $request->hasHeader('Authorization', 'Basic '.base64_encode('beem-key:beem-secret')));
+    }
+
+    public function test_the_messaging_tab_says_when_beem_has_no_balance_to_give(): void
+    {
+        Http::fake(['*vendors/balance*' => Http::response(['message' => 'Unauthorized'], 401)]);
+        $this->put(route('admin.settings.messaging'), $this->messaging());
+
+        $this->get(route('admin.settings.index', ['tab' => 'messaging']))->assertOk()
+            ->assertSee(t('messaging.balanceUnavailable'));
+    }
+
     public function test_creating_a_login_sends_sms_and_email_with_the_phone_as_username(): void
     {
         Http::fake(['*beem*' => Http::response(['successful' => true])]);
