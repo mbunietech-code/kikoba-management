@@ -50,20 +50,20 @@
         <x-card>
             <p class="text-[12.5px] font-semibold text-neutral-700">{{ t('members.nextOfKin') }}</p>
             @if ($member->next_of_kin)
-                <div class="mt-3 flex items-center gap-3">
+                <div class="mt-3 flex flex-col items-center text-center">
                     @if ($member->next_of_kin_photo_path)
-                        <img src="{{ route('admin.members.kin-photo', $member) }}" alt="{{ $member->next_of_kin }}" class="h-14 w-14 shrink-0 rounded-xl object-cover">
+                        <img src="{{ route('admin.members.kin-photo', $member) }}" alt="{{ $member->next_of_kin }}" class="h-24 w-24 rounded-xl object-cover">
                     @else
-                        <x-avatar :name="$member->next_of_kin" color="#64748b" />
+                        <x-avatar :name="$member->next_of_kin" color="#64748b" size="lg" />
                     @endif
-                    <div class="min-w-0">
-                        <p class="truncate text-[14px] font-semibold text-neutral-900">{{ $member->next_of_kin }}</p>
-                        <p class="text-[12.5px] text-neutral-500">{{ $member->next_of_kin_relationship ?: '—' }}</p>
+                    <p class="mt-3 font-display text-lg font-bold text-neutral-900">{{ $member->next_of_kin }}</p>
+                    @if ($member->next_of_kin_relationship)
+                        <x-badge tone="neutral">{{ $member->next_of_kin_relationship }}</x-badge>
+                    @endif
+                    <div class="mt-4 w-full space-y-2 text-left text-[13px] text-neutral-600">
+                        <p class="flex items-center gap-2"><x-heroicon-o-phone class="h-4 w-4 shrink-0 text-neutral-400" /> {{ $member->next_of_kin_phone ?: '—' }}</p>
+                        <p class="flex items-center gap-2"><x-heroicon-o-map-pin class="h-4 w-4 shrink-0 text-neutral-400" /> {{ $member->next_of_kin_address ?: '—' }}</p>
                     </div>
-                </div>
-                <div class="mt-3 space-y-2 text-[13px] text-neutral-600">
-                    <p class="flex items-center gap-2"><x-heroicon-o-phone class="h-4 w-4 shrink-0 text-neutral-400" /> {{ $member->next_of_kin_phone ?: '—' }}</p>
-                    <p class="flex items-center gap-2"><x-heroicon-o-map-pin class="h-4 w-4 shrink-0 text-neutral-400" /> {{ $member->next_of_kin_address ?: '—' }}</p>
                 </div>
             @else
                 <p class="mt-1 text-[12.5px] text-neutral-500">{{ t('members.noNextOfKin') }}</p>
