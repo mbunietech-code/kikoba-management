@@ -24,7 +24,7 @@ class ReversalService
                 throw new RuntimeException('This transaction has already been reversed.');
             }
 
-            $reference = 'TXN-'.now()->format('Y').'-'.str_pad((string) (Transaction::count() + 1), 6, '0', STR_PAD_LEFT);
+            $reference = next_reference('TXN', Transaction::class, 'transaction_reference');
 
             $reversal = Transaction::create([
                 'organization_id' => $txn->organization_id,

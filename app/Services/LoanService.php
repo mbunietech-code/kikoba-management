@@ -2,7 +2,6 @@
 
 namespace App\Services;
 
-use App\Models\Guarantor;
 use App\Models\Loan;
 use App\Models\LoanApplication;
 use App\Models\LoanProduct;
@@ -77,12 +76,15 @@ class LoanService
             }
 
             if (! in_array($loan->status, ['submitted', 'under_review', 'draft'])) {
-                if ($decision === 'reject') {
+                // An approved (not yet disbursed) loan may still be turned down; anything
+                // further along must never be re-approved — that would allow a second disbursement.
+                if ($decision === 'reject' && $loan->status === 'approved') {
                     $loan->update(['status' => 'rejected']);
-                    Audit::log($request, 'REJECT_LOAN', 'Loan', $loan->id, ['status' => $loan->getOriginal('status')], ['status' => 'rejected']);
+                    Audit::log($request, 'REJECT_LOAN', 'Loan', $loan->id, ['status' => 'approved'], ['status' => 'rejected']);
 
                     return $loan->fresh();
                 }
+                abort(422, "Loan {$loan->loan_number} is {$loan->status} and is no longer awaiting a decision.");
             }
 
             $before = $loan->status;
@@ -149,7 +151,7 @@ class LoanService
                 ]);
             }
 
-            $reference = 'TXN-2026-'.str_pad((string) (Transaction::count() + 1), 6, '0', STR_PAD_LEFT);
+            $reference = next_reference('TXN', Transaction::class, 'transaction_reference');
             $txn = Transaction::create([
                 'organization_id' => $loan->organization_id,
                 'member_id' => $loan->member_id,
@@ -181,12 +183,49 @@ class LoanService
         });
     }
 
+    /**
+     * Flag instalments whose due date has passed as overdue, and keep each
+     * running loan's status in step: "overdue" while it has a late instalment,
+     * back to "active" once the member has caught up.
+     */
+    public function markOverdue(string $orgId, ?string $loanId = null): void
+    {
+        $today = now()->toDateString();
+        $loanIds = Loan::where('organization_id', $orgId)
+            ->whereIn('status', ['active', 'disbursed', 'overdue'])
+            ->when($loanId, fn ($q) => $q->whereKey($loanId))
+            ->pluck('id');
+
+        if ($loanIds->isEmpty()) {
+            return;
+        }
+
+        LoanRepaymentSchedule::whereIn('loan_id', $loanIds)
+            ->whereIn('status', ['pending', 'partial'])
+            ->where('due_date', '<', $today)
+            ->update(['status' => 'overdue']);
+
+        $late = LoanRepaymentSchedule::whereIn('loan_id', $loanIds)
+            ->where('status', 'overdue')
+            ->distinct()->pluck('loan_id');
+
+        Loan::whereIn('id', $late)->whereIn('status', ['active', 'disbursed'])->update(['status' => 'overdue']);
+        Loan::whereIn('id', $loanIds->diff($late))->where('status', 'overdue')->update(['status' => 'active']);
+    }
+
     public function repay(Request $request, string $id, array $data): LoanRepayment
     {
         return DB::transaction(function () use ($request, $id, $data) {
             /** @var Loan $loan */
             $loan = Loan::lockForUpdate()->findOrFail($id);
             $amount = (int) $data['amount'];
+
+            if (! in_array($loan->status, ['active', 'disbursed', 'overdue', 'defaulted'], true)) {
+                abort(422, "Loan {$loan->loan_number} is {$loan->status}; only running loans take repayments.");
+            }
+            if ($amount > $loan->outstanding_balance) {
+                abort(422, 'Repayment is more than the outstanding balance of '.money($loan->outstanding_balance).'.');
+            }
 
             // allocate: penalty -> interest -> fees -> principal, across due schedule rows
             $remaining = $amount;
@@ -209,7 +248,7 @@ class LoanService
                 $alloc['principal'] += (int) round($pay * $row->principal_due / $ratioBase);
             }
 
-            $reference = 'TXN-2026-'.str_pad((string) (Transaction::count() + 1), 6, '0', STR_PAD_LEFT);
+            $reference = next_reference('TXN', Transaction::class, 'transaction_reference');
             $txn = Transaction::create([
                 'organization_id' => $loan->organization_id,
                 'member_id' => $loan->member_id,
@@ -243,6 +282,9 @@ class LoanService
                 'outstanding_balance' => $outstanding,
                 'status' => $outstanding === 0 ? 'completed' : $loan->status,
             ]);
+            if ($outstanding > 0) {
+                $this->markOverdue($loan->organization_id, $loan->id);
+            }
 
             app(AccountingService::class)->post(
                 $loan->organization_id, $reference, "Loan repayment {$loan->loan_number}",

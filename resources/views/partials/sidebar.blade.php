@@ -17,7 +17,11 @@
                     <p class="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-wider text-neutral-400">{{ t($section['title']) }}</p>
                     <ul class="flex flex-col gap-0.5">
                         @foreach ($items as $it)
-                            @php $active = request()->routeIs($it['route']) || request()->routeIs(str($it['route'])->beforeLast('.').'.*'); @endphp
+                            @php
+                                $route = str($it['route']);
+                                $active = request()->routeIs($it['route'], $it['route'].'.*')
+                                    || ($route->endsWith('.index') && request()->routeIs($route->beforeLast('.').'.*'));
+                            @endphp
                             <li>
                                 <a href="{{ route($it['route']) }}"
                                    class="flex items-center gap-2.5 rounded-lg px-3 py-2 text-[13.5px] font-medium transition

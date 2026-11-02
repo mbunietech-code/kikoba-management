@@ -37,7 +37,7 @@ class SavingsService
             $before = $account->balance;
             $after = $type === 'deposit' ? $before + $data['amount'] : $before - $data['amount'];
 
-            $reference = 'TXN-2026-'.str_pad((string) (Transaction::count() + 1), 6, '0', STR_PAD_LEFT);
+            $reference = next_reference('TXN', Transaction::class, 'transaction_reference');
 
             $txn = Transaction::create([
                 'organization_id' => $account->organization_id,

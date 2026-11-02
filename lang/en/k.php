@@ -6,6 +6,8 @@ return [
         'tagline' => 'Group Savings & Loans Management',
     ],
     'common' => [
+        'searchMembers' => 'Search members by name, number or phone',
+        'menu' => 'Menu',
         'search' => 'Search',
         'searchPlaceholder' => 'Search…',
         'filter' => 'Filter',
@@ -161,6 +163,9 @@ return [
         'roleMember' => 'Member',
     ],
     'dashboard' => [
+        'cashFlowHint' => 'Money in and out of cash and bank',
+        'moneyIn' => 'Money in',
+        'moneyOut' => 'Money out',
         'welcome' => 'Welcome back, :name',
         'overview' => 'Here is what is happening in your group today.',
         'totalMembers' => 'Total members',
@@ -182,7 +187,7 @@ return [
         'loanStatus' => 'Loan portfolio by status',
         'recentTransactions' => 'Recent transactions',
         'pendingApprovals' => 'Pending approvals',
-        'upcomingRepayments' => 'Upcoming repayments',
+        'upcomingRepayments' => 'Repayments due',
         'contributionTrend' => 'Contribution trend',
     ],
     'member' => [
@@ -311,6 +316,8 @@ return [
         ],
     ],
     'loans' => [
+        'notAwaitingDecision' => 'This loan is no longer awaiting a decision.',
+        'notRepayable' => 'Only running loans can take repayments.',
         'title' => 'Loans',
         'subtitle' => 'Applications, disbursement and repayment tracking.',
         'loanNumber' => 'Loan no.',

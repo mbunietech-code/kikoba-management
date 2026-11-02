@@ -3,7 +3,7 @@
     $tint = ['primary'=>'bg-primary-50 text-primary-700','secondary'=>'bg-secondary-50 text-secondary-700',
         'tertiary'=>'bg-tertiary-50 text-tertiary-700','neutral'=>'bg-neutral-100 text-neutral-600'][$tone] ?? 'bg-primary-50 text-primary-700';
 @endphp
-<div class="k-card k-row-anim p-4" style="animation-delay: {{ $i * 40 }}ms">
+<div class="k-card p-4">
     <div class="flex items-start justify-between">
         <p class="text-[12.5px] font-medium text-neutral-500">{{ $label }}</p>
         @if ($icon)

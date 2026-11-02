@@ -24,11 +24,11 @@ class AccountingService
             throw new RuntimeException("Unbalanced journal: debit {$debit} != credit {$credit}");
         }
 
-        return DB::transaction(function () use ($orgId, $reference, $description, $lines, $transactionId) {
+        return DB::transaction(function () use ($orgId, $description, $lines, $transactionId) {
             $entry = JournalEntry::create([
                 'organization_id' => $orgId,
                 'transaction_id' => $transactionId,
-                'reference' => 'JE-'.now()->format('Y').'-'.str_pad((string) (JournalEntry::count() + 1), 5, '0', STR_PAD_LEFT),
+                'reference' => next_reference('JE', JournalEntry::class, 'reference', 5),
                 'description' => $description,
                 'entry_date' => now()->toDateString(),
                 'posted_by' => 'System',

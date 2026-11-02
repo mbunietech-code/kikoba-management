@@ -6,6 +6,8 @@ return [
         'tagline' => 'Usimamizi wa Akiba na Mikopo ya Chama',
     ],
     'common' => [
+        'searchMembers' => 'Tafuta mwanachama kwa jina, namba au simu',
+        'menu' => 'Menyu',
         'search' => 'Tafuta',
         'searchPlaceholder' => 'Tafuta…',
         'filter' => 'Chuja',
@@ -161,6 +163,9 @@ return [
         'roleMember' => 'Mwanachama',
     ],
     'dashboard' => [
+        'cashFlowHint' => 'Fedha zilizoingia na kutoka (taslimu na benki)',
+        'moneyIn' => 'Zilizoingia',
+        'moneyOut' => 'Zilizotoka',
         'welcome' => 'Karibu tena, :name',
         'overview' => 'Haya ndiyo yanayoendelea kwenye chama chako leo.',
         'totalMembers' => 'Jumla ya wanachama',
@@ -182,7 +187,7 @@ return [
         'loanStatus' => 'Mikopo kwa hali',
         'recentTransactions' => 'Miamala ya hivi karibuni',
         'pendingApprovals' => 'Yanayosubiri idhini',
-        'upcomingRepayments' => 'Marejesho yajayo',
+        'upcomingRepayments' => 'Marejesho yanayodaiwa',
         'contributionTrend' => 'Mwenendo wa michango',
     ],
     'member' => [
@@ -311,6 +316,8 @@ return [
         ],
     ],
     'loans' => [
+        'notAwaitingDecision' => 'Mkopo huu haujasubiri uamuzi tena.',
+        'notRepayable' => 'Marejesho yanapokelewa kwa mikopo inayoendelea tu.',
         'title' => 'Mikopo',
         'subtitle' => 'Maombi, utoaji na ufuatiliaji wa marejesho.',
         'loanNumber' => 'Namba ya mkopo',

@@ -4,10 +4,13 @@ namespace App\Http\Controllers\Web\Member;
 
 use App\Http\Controllers\Controller;
 use App\Models\Loan;
+use App\Models\LoanApplication;
 use App\Models\LoanProduct;
 use App\Models\LoanRepayment;
 use App\Models\LoanRepaymentSchedule;
 use App\Models\Member;
+use App\Models\Notification;
+use App\Models\Project;
 use App\Services\LoanCalculationService;
 use App\Support\Audit;
 use Illuminate\Http\Request;
@@ -109,7 +112,7 @@ class PortalController extends Controller
             'period' => ['required', 'integer', 'min:1', 'max:36'],
             'purpose' => ['nullable', 'string'],
         ]);
-        \App\Models\LoanApplication::create([
+        LoanApplication::create([
             'organization_id' => $member->organization_id,
             'member_id' => $member->id,
             'loan_product_id' => $data['loan_product_id'],
@@ -143,7 +146,7 @@ class PortalController extends Controller
         return view('member.projects', compact('member', 'investments'));
     }
 
-    public function project(Request $request, \App\Models\Project $project)
+    public function project(Request $request, Project $project)
     {
         $member = $this->member($request);
         $mine = $project->investments()->where('member_id', $member->id)->first();
@@ -181,7 +184,7 @@ class PortalController extends Controller
 
     public function notifications(Request $request)
     {
-        $notifications = \App\Models\Notification::where('organization_id', $this->member($request)->organization_id)
+        $notifications = Notification::visibleTo($request->user(), $this->member($request)->organization_id)
             ->latest('created_at')->paginate(30);
 
         return view('member.notifications', compact('notifications'));

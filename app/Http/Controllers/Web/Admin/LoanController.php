@@ -22,10 +22,13 @@ class LoanController extends Controller
     public function index(Request $request)
     {
         $orgId = app('kikoba.org')->id;
+        $this->loans->markOverdue($orgId);
         $tab = $request->get('tab', 'all');
         $loans = Loan::where('organization_id', $orgId)->with('member', 'product')
             ->when(isset(self::TABS[$tab]), fn ($q) => $q->whereIn('status', self::TABS[$tab]))
-            ->when($request->q, fn ($q, $s) => $q->where('loan_number', 'like', "%$s%")->orWhere('purpose', 'like', "%$s%"))
+            ->when($request->q, fn ($q, $s) => $q->where(fn ($w) => $w->where('loan_number', 'like', "%$s%")
+                ->orWhere('purpose', 'like', "%$s%")
+                ->orWhereHas('member', fn ($m) => $m->where('full_name', 'like', "%$s%")->orWhere('member_number', 'like', "%$s%"))))
             ->latest('application_date')->paginate(15)->withQueryString();
 
         $summary = [
@@ -40,7 +43,8 @@ class LoanController extends Controller
 
     public function show(Request $request, Loan $loan)
     {
-        $loan->load('member', 'product', 'schedule', 'repayments', 'guarantors.guarantorMember');
+        $this->loans->markOverdue($loan->organization_id, $loan->id);
+        $loan->refresh()->load('member', 'product', 'schedule', 'repayments', 'guarantors.guarantorMember');
         $tab = $request->get('tab', 'overview');
 
         return view('admin.loans.show', compact('loan', 'tab'));
@@ -48,6 +52,9 @@ class LoanController extends Controller
 
     public function approve(Request $request, Loan $loan)
     {
+        if (! in_array($loan->status, self::TABS['applications'], true)) {
+            return back()->with('toast', t('loans.notAwaitingDecision'));
+        }
         $loan->update(['status' => 'approved', 'approval_date' => now()->toDateString()]);
         Audit::log($request, 'APPROVE_LOAN', 'Loan', $loan->id, ['status' => $loan->getOriginal('status')], ['status' => 'approved']);
 
@@ -56,6 +63,9 @@ class LoanController extends Controller
 
     public function reject(Request $request, Loan $loan)
     {
+        if (! in_array($loan->status, [...self::TABS['applications'], 'approved'], true)) {
+            return back()->with('toast', t('loans.notAwaitingDecision'));
+        }
         $loan->update(['status' => 'rejected']);
         Audit::log($request, 'REJECT_LOAN', 'Loan', $loan->id);
 
@@ -75,8 +85,11 @@ class LoanController extends Controller
 
     public function repay(Request $request, Loan $loan)
     {
+        if (! in_array($loan->status, ['active', 'disbursed', 'overdue', 'defaulted'], true)) {
+            return back()->with('toast', t('loans.notRepayable'));
+        }
         $data = $request->validate([
-            'amount' => ['required', 'integer', 'min:1'],
+            'amount' => ['required', 'integer', 'min:1', 'max:'.$loan->outstanding_balance],
             'method' => ['nullable', 'in:mobile_money,bank,card,cash,manual'],
         ]);
         $this->loans->repay($request, $loan->id, $data);

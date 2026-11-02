@@ -8,7 +8,7 @@
     </x-page-header>
 
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <x-stat :i="0" :label="t('dashboard.totalMembers')" :value="$summary['totalMembers']" icon="users" :delta="'+'.$summary['newMembers']" :hint="strtolower(t('dashboard.newMembers'))" />
+        <x-stat :i="0" :label="t('dashboard.totalMembers')" :value="$summary['totalMembers']" icon="users" :delta="$summary['newMembers'] ? '+'.$summary['newMembers'] : null" :hint="$summary['newMembers'] ? strtolower(t('dashboard.newMembers')) : null" />
         <x-stat :i="1" tone="secondary" :label="t('dashboard.totalSavings')" :value="money($summary['totalSavings'], true)" icon="banknotes" />
         <x-stat :i="2" tone="tertiary" :label="t('dashboard.totalShares')" :value="money($summary['totalShares'], true)" icon="chart-pie" />
         <x-stat :i="3" tone="neutral" :label="t('dashboard.outstandingLoans')" :value="money($summary['outstanding'], true)" icon="credit-card" :hint="t('dashboard.portfolioAtRisk').' '.pct($summary['par']*100)" />
@@ -20,11 +20,18 @@
 
     <div class="mt-4 grid gap-4 lg:grid-cols-3">
         <x-card class="lg:col-span-2">
-            <x-card-header :title="t('dashboard.cashFlow')" subtitle="Mar – Sep 2026" />
+            <x-card-header :title="t('dashboard.cashFlow')" :subtitle="t('dashboard.cashFlowHint').' · '.$cashFlow['period']">
+                <x-slot:action>
+                    <div class="flex items-center gap-3 text-[12px] text-neutral-500">
+                        <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-primary-800"></span>{{ t('dashboard.moneyIn') }}</span>
+                        <span class="inline-flex items-center gap-1.5"><span class="h-2 w-2 rounded-sm bg-red-600"></span>{{ t('dashboard.moneyOut') }}</span>
+                    </div>
+                </x-slot:action>
+            </x-card-header>
             <div class="h-56">
-                <canvas x-chart="{ type: 'area', labels: @js($cashFlow['labels']), series: [
-                    { label: 'in', data: @js($cashFlow['inflow']), color: '#115e59' },
-                    { label: 'out', data: @js($cashFlow['outflow']), color: '#dc2626' }
+                <canvas x-chart="{ type: 'bar', labels: @js($cashFlow['labels']), series: [
+                    { label: @js(t('dashboard.moneyIn')), data: @js($cashFlow['inflow']), color: '#115e59' },
+                    { label: @js(t('dashboard.moneyOut')), data: @js($cashFlow['outflow']), color: '#dc2626' }
                 ] }"></canvas>
             </div>
         </x-card>

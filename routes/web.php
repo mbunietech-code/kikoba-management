@@ -4,6 +4,7 @@ use App\Http\Controllers\Web\Admin;
 use App\Http\Controllers\Web\Auth\LoginController;
 use App\Http\Controllers\Web\Member;
 use App\Http\Middleware\AuthResponseHeaders;
+use App\Http\Middleware\EnsureStaff;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', fn () => redirect()->route(
@@ -29,7 +30,7 @@ Route::middleware(['guest', AuthResponseHeaders::class])->group(function () {
 Route::post('/logout', [LoginController::class, 'logout'])->middleware('auth')->name('logout');
 
 /* -------------------------------- admin -------------------------------- */
-Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () {
+Route::middleware(['auth', EnsureStaff::class])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [Admin\DashboardController::class, 'index'])->name('dashboard');
 
     Route::controller(Admin\MemberController::class)->prefix('members')->name('members.')->group(function () {

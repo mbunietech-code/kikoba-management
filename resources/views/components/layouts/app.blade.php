@@ -3,6 +3,7 @@
     use App\Support\Nav;
     $isStaff = auth()->user()?->isStaff();
     $sections = $isStaff ? Nav::admin() : Nav::member();
+    $unreadNotifications = \App\Models\Notification::visibleTo(auth()->user(), $org->id)->whereNull('read_at')->count();
 @endphp
 <!DOCTYPE html>
 <html lang="{{ app()->getLocale() }}">
@@ -27,15 +28,24 @@
     <div class="flex min-w-0 flex-1 flex-col">
         {{-- topbar --}}
         <header class="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-neutral-200 bg-white px-4">
-            <button class="text-neutral-500 lg:hidden" x-on:click="nav = true"><x-heroicon-o-bars-3 class="h-5 w-5" /></button>
-            <div class="relative hidden max-w-xs flex-1 sm:block">
-                <x-heroicon-o-magnifying-glass class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                <input placeholder="{{ t('common.search') }}…" class="h-9 w-full rounded-lg border border-neutral-200 bg-neutral-50 pl-9 pr-3 text-sm">
-            </div>
+            <button class="flex h-9 w-9 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100 lg:hidden" x-on:click="nav = true" aria-label="{{ t('common.menu') }}"><x-heroicon-o-bars-3 class="h-5 w-5" /></button>
+            @if ($isStaff && auth()->user()->can('members.view'))
+                <form method="GET" action="{{ route('admin.members.index') }}" role="search" class="relative hidden max-w-xs flex-1 sm:block">
+                    <x-heroicon-o-magnifying-glass class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                    <input type="search" name="q" value="{{ request()->routeIs('admin.members.index') ? request('q') : '' }}"
+                           placeholder="{{ t('common.searchMembers') }}" aria-label="{{ t('common.searchMembers') }}"
+                           class="h-9 w-full rounded-md border border-neutral-200 bg-neutral-50 pl-9 pr-3 text-sm focus:border-primary-500 focus:bg-white focus:outline-none">
+                </form>
+            @endif
             <div class="ml-auto flex items-center gap-2">
                 <x-lang-toggle />
-                <a href="{{ $isStaff ? route('admin.notifications.index') : route('member.notifications') }}" class="relative text-neutral-400 hover:text-neutral-600">
+                <a href="{{ $isStaff ? route('admin.notifications.index') : route('member.notifications') }}"
+                   class="relative flex h-9 w-9 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700"
+                   aria-label="{{ t('nav.notifications') }}{{ $unreadNotifications ? ' ('.$unreadNotifications.')' : '' }}">
                     <x-heroicon-o-bell class="h-5 w-5" />
+                    @if ($unreadNotifications)
+                        <span class="absolute right-1 top-1 min-w-4 rounded-full bg-red-600 px-1 text-center text-[10px] font-semibold leading-4 text-white">{{ $unreadNotifications > 9 ? '9+' : $unreadNotifications }}</span>
+                    @endif
                 </a>
                 <div x-data="{ open: false }" class="relative">
                     <button x-on:click="open = !open" x-on:click.outside="open = false" class="flex items-center gap-2">

@@ -14,6 +14,8 @@ use App\Models\Project;
 use App\Models\SavingsAccount;
 use App\Models\Share;
 use App\Models\Transaction;
+use App\Services\DashboardMetrics;
+use App\Services\LoanService;
 use App\Support\ApiResponse;
 use Illuminate\Http\Request;
 
@@ -22,6 +24,7 @@ class DashboardController extends ApiController
     public function index(Request $request)
     {
         $org = $this->orgId($request);
+        app(LoanService::class)->markOverdue($org);
         $acc = fn ($code) => (int) Account::where('organization_id', $org)->where('account_code', $code)->value('balance');
 
         $totalShares = (int) Share::where('organization_id', $org)->sum('total_value');
@@ -38,7 +41,7 @@ class DashboardController extends ApiController
         $summary = [
             'totalMembers' => Member::where('organization_id', $org)->count(),
             'activeMembers' => Member::where('organization_id', $org)->where('status', 'active')->count(),
-            'newMembers' => Member::where('organization_id', $org)->where('registration_date', '>=', now()->subDays(60))->count(),
+            'newMembers' => Member::where('organization_id', $org)->where('registration_date', '>=', now()->startOfMonth()->toDateString())->count(),
             'totalShares' => $totalShares,
             'totalSavings' => $totalSavings,
             'disbursed' => $disbursed,
@@ -58,14 +61,13 @@ class DashboardController extends ApiController
         $loanStatus = Loan::where('organization_id', $org)
             ->selectRaw('status, count(*) c')->groupBy('status')->pluck('c', 'status');
 
-        $months = ['Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'];
-        $cashFlow = collect($months)->map(fn ($m, $i) => [
-            'month' => $m,
-            'inflow' => 4200000 + $i * 380000 + ($i % 2 ? 600000 : 0),
-            'outflow' => 3100000 + $i * 240000 + ($i % 3 ? 300000 : 0),
+        $flow = app(DashboardMetrics::class)->cashFlow($org);
+        $cashFlow = collect($flow['labels'])->map(fn ($m, $i) => [
+            'month' => $m, 'inflow' => $flow['inflow'][$i], 'outflow' => $flow['outflow'][$i],
         ]);
-        $savingsVsLoans = collect($months)->map(fn ($m, $i) => [
-            'month' => $m, 'savings' => 52000000 + $i * 3400000, 'loans' => 40000000 + $i * 3900000,
+        $trend = app(DashboardMetrics::class)->savingsVsLoans($org);
+        $savingsVsLoans = collect($trend['labels'])->map(fn ($m, $i) => [
+            'month' => $m, 'savings' => $trend['savings'][$i], 'loans' => $trend['loans'][$i],
         ]);
 
         $pendingApprovals = Loan::where('organization_id', $org)
@@ -80,7 +82,7 @@ class DashboardController extends ApiController
                 'member' => ['id' => $l->member?->id, 'fullName' => $l->member?->full_name, 'memberNumber' => $l->member?->member_number, 'avatarColor' => $l->member?->avatar_color],
             ]);
 
-        $upcoming = LoanRepaymentSchedule::whereIn('status', ['pending', 'overdue'])
+        $upcoming = LoanRepaymentSchedule::whereIn('status', ['pending', 'partial', 'overdue'])
             ->whereHas('loan', fn ($q) => $q->where('organization_id', $org))
             ->with('loan.member:id,full_name,member_number,avatar_color')
             ->orderBy('due_date')->limit(5)->get()

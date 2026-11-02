@@ -1,6 +1,7 @@
 <?php
 
-use Illuminate\Support\Number;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 if (! function_exists('t')) {
     /** Short translation helper for the ported dictionary. */
@@ -58,7 +59,7 @@ if (! function_exists('fdate')) {
         if (! $value) {
             return '—';
         }
-        $d = $value instanceof \DateTimeInterface ? $value : \Illuminate\Support\Carbon::parse($value);
+        $d = $value instanceof DateTimeInterface ? $value : Carbon::parse($value);
 
         return match ($style) {
             'short' => $d->format('d/m/Y'),
@@ -90,5 +91,25 @@ if (! function_exists('status_tone')) {
             'closed' => 'neutral', 'expired' => 'neutral', 'deceased' => 'neutral',
             'overdue' => 'danger', 'rejected' => 'danger', 'failed' => 'danger', 'defaulted' => 'danger', 'reversed' => 'danger',
         ][$status] ?? 'neutral';
+    }
+}
+
+if (! function_exists('next_reference')) {
+    /**
+     * Next free sequential reference such as TXN-2026-000031 for the given model column.
+     *
+     * @param  class-string<Model>  $model
+     */
+    function next_reference(string $prefix, string $model, string $column, int $pad = 6): string
+    {
+        $query = fn () => $model::query()->withoutGlobalScopes();
+        $year = now()->format('Y');
+        $sequence = $query()->count() + 1;
+
+        do {
+            $reference = "{$prefix}-{$year}-".str_pad((string) $sequence++, $pad, '0', STR_PAD_LEFT);
+        } while ($query()->where($column, $reference)->exists());
+
+        return $reference;
     }
 }
