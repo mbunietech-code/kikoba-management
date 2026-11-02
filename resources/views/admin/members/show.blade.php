@@ -60,19 +60,16 @@
                     @if ($member->next_of_kin_relationship)
                         <x-badge tone="neutral">{{ $member->next_of_kin_relationship }}</x-badge>
                     @endif
-                    <dl class="mt-4 w-full space-y-3 text-left text-[13px]">
+                    <dl class="mt-4 w-full space-y-2 text-left text-[13px]">
                         @foreach ([
                             ['phone', t('members.nextOfKinPhone'), $member->next_of_kin_phone],
                             ['device-phone-mobile', t('members.kinAltPhone'), $member->next_of_kin_alt_phone],
                             ['home', t('members.kinAddress'), $member->next_of_kin_address],
                             ['briefcase', t('members.kinWorkplace'), $member->next_of_kin_workplace],
                         ] as [$icon, $label, $value])
-                            <div class="flex gap-2">
-                                <x-dynamic-component :component="'heroicon-o-'.$icon" class="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" />
-                                <div class="min-w-0">
-                                    <dt class="text-[11.5px] text-neutral-400">{{ $label }}</dt>
-                                    <dd class="break-words text-neutral-700">{{ $value ?: '—' }}</dd>
-                                </div>
+                            <div class="flex items-start gap-2" title="{{ $label }}">
+                                <dt class="mt-0.5 shrink-0"><x-dynamic-component :component="'heroicon-o-'.$icon" class="h-4 w-4 text-neutral-400" aria-hidden="true" /><span class="sr-only">{{ $label }}</span></dt>
+                                <dd class="min-w-0 break-words text-neutral-600">{{ $value ?: '—' }}</dd>
                             </div>
                         @endforeach
                     </dl>
