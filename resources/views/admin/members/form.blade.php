@@ -91,8 +91,10 @@
                 <div class="grid gap-4">
                     <x-field :label="t('common.name')" name="next_of_kin"><x-input name="next_of_kin" :value="old('next_of_kin', $member->next_of_kin)" maxlength="150" /></x-field>
                     <x-field :label="t('members.nextOfKinPhone')" name="next_of_kin_phone"><x-input type="tel" name="next_of_kin_phone" :value="old('next_of_kin_phone', $member->next_of_kin_phone)" maxlength="20" /></x-field>
+                    <x-field :label="t('members.kinAltPhone')" name="next_of_kin_alt_phone"><x-input type="tel" name="next_of_kin_alt_phone" :value="old('next_of_kin_alt_phone', $member->next_of_kin_alt_phone)" maxlength="20" /></x-field>
                     <x-field :label="t('members.kinRelationship')" name="next_of_kin_relationship"><x-input name="next_of_kin_relationship" :value="old('next_of_kin_relationship', $member->next_of_kin_relationship)" maxlength="100" /></x-field>
                     <x-field :label="t('members.kinAddress')" name="next_of_kin_address"><x-input name="next_of_kin_address" :value="old('next_of_kin_address', $member->next_of_kin_address)" maxlength="191" /></x-field>
+                    <x-field :label="t('members.kinWorkplace')" name="next_of_kin_workplace"><x-input name="next_of_kin_workplace" :value="old('next_of_kin_workplace', $member->next_of_kin_workplace)" maxlength="150" /></x-field>
                     <div>
                         @if ($member->next_of_kin_photo_path)
                             <img src="{{ route('admin.members.kin-photo', $member) }}" alt="{{ $member->next_of_kin }}" class="mb-3 h-20 w-20 rounded-xl object-cover">

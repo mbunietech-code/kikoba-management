@@ -60,10 +60,22 @@
                     @if ($member->next_of_kin_relationship)
                         <x-badge tone="neutral">{{ $member->next_of_kin_relationship }}</x-badge>
                     @endif
-                    <div class="mt-4 w-full space-y-2 text-left text-[13px] text-neutral-600">
-                        <p class="flex items-center gap-2"><x-heroicon-o-phone class="h-4 w-4 shrink-0 text-neutral-400" /> {{ $member->next_of_kin_phone ?: '—' }}</p>
-                        <p class="flex items-center gap-2"><x-heroicon-o-map-pin class="h-4 w-4 shrink-0 text-neutral-400" /> {{ $member->next_of_kin_address ?: '—' }}</p>
-                    </div>
+                    <dl class="mt-4 w-full space-y-3 text-left text-[13px]">
+                        @foreach ([
+                            ['phone', t('members.nextOfKinPhone'), $member->next_of_kin_phone],
+                            ['device-phone-mobile', t('members.kinAltPhone'), $member->next_of_kin_alt_phone],
+                            ['home', t('members.kinAddress'), $member->next_of_kin_address],
+                            ['briefcase', t('members.kinWorkplace'), $member->next_of_kin_workplace],
+                        ] as [$icon, $label, $value])
+                            <div class="flex gap-2">
+                                <x-dynamic-component :component="'heroicon-o-'.$icon" class="mt-0.5 h-4 w-4 shrink-0 text-neutral-400" />
+                                <div class="min-w-0">
+                                    <dt class="text-[11.5px] text-neutral-400">{{ $label }}</dt>
+                                    <dd class="break-words text-neutral-700">{{ $value ?: '—' }}</dd>
+                                </div>
+                            </div>
+                        @endforeach
+                    </dl>
                 </div>
             @else
                 <p class="mt-1 text-[12.5px] text-neutral-500">{{ t('members.noNextOfKin') }}</p>

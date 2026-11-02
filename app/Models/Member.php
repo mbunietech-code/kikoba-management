@@ -22,7 +22,7 @@ class Member extends BaseModel
         'registration_date', 'status', 'avatar_color',
         'nida_number', 'nationality', 'marital_status', 'alternative_phone',
         'region', 'district', 'ward', 'street', 'house_number', 'occupation', 'employer',
-        'next_of_kin_relationship', 'next_of_kin_address', 'next_of_kin_photo_path', 'photo_path',
+        'next_of_kin_relationship', 'next_of_kin_address', 'next_of_kin_alt_phone', 'next_of_kin_workplace', 'next_of_kin_photo_path', 'photo_path',
         'additional_next_of_kin',
     ];
 

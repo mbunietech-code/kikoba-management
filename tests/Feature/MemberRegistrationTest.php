@@ -169,6 +169,21 @@ class MemberRegistrationTest extends TestCase
         $this->get(route('admin.members.kin-photo', $member))->assertNotFound();
     }
 
+    public function test_next_of_kin_alternative_phone_workplace_and_home_show_on_the_card(): void
+    {
+        $this->post(route('admin.members.store'), [...$this->details(), 'next_of_kin_alt_phone' => '0754000111', 'next_of_kin_workplace' => 'Muhimbili Hospital'])
+            ->assertSessionHasNoErrors();
+        $member = Member::firstOrFail();
+
+        $this->assertSame('0754000111', $member->next_of_kin_alt_phone);
+        $this->get(route('admin.members.show', $member))->assertOk()
+            ->assertSeeInOrder([t('members.kinAltPhone'), '0754000111', t('members.kinAddress'), $member->next_of_kin_address, t('members.kinWorkplace'), 'Muhimbili Hospital']);
+        $this->get(route('admin.members.edit', $member))->assertSee('name="next_of_kin_workplace"', false)->assertSee('Muhimbili Hospital');
+
+        $this->put(route('admin.members.update', $member), [...$this->details(), 'next_of_kin' => '', 'next_of_kin_phone' => '', 'next_of_kin_relationship' => '', 'next_of_kin_address' => '', 'next_of_kin_workplace' => 'Somewhere'])
+            ->assertSessionHasErrors('next_of_kin');
+    }
+
     public function test_invalid_uploads_are_rejected_before_any_record_is_written(): void
     {
         foreach ([UploadedFile::fake()->create('script.php', 1, 'text/plain'), UploadedFile::fake()->create('big.jpg', 2049, 'image/jpeg')] as $photo) {
