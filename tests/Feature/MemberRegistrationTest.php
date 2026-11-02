@@ -52,6 +52,7 @@ class MemberRegistrationTest extends TestCase
         $this->assertSame('Shop owner', $member->occupation);
         $this->assertSame('2020-01-02', $member->registration_date->toDateString());
         $this->assertSame($this->organization->id, $member->organization_id);
+        $this->assertSame(0, SavingsAccount::where('member_id', $member->id)->value('balance'), 'a savings account is opened on registration');
         $this->get(route('admin.members.edit', $member))->assertOk()->assertSee('19900101123450000101');
         $this->get(route('admin.members.show', $member))->assertOk()->assertSee('Dar es Salaam')->assertSee('Sibling');
         $this->assertArrayNotHasKey('nida_number', $member->toArray());

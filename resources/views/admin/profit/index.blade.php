@@ -1,6 +1,8 @@
 @php $title = t('profit.title'); @endphp
 <x-layouts.app :title="$title">
-    <x-page-header :title="t('profit.title')" :subtitle="t('profit.subtitle')" />
+    <x-page-header :title="t('profit.title')" :subtitle="t('profit.subtitle')">
+        <x-slot:actions>@can('profit.manage')<x-btn icon="plus" :href="route('admin.profit.create')">{{ t('profit.newDistribution') }}</x-btn>@endcan</x-slot:actions>
+    </x-page-header>
     <x-card flush>
         <table class="w-full text-sm">
             <thead><tr class="border-b border-neutral-200 text-left text-[11px] uppercase tracking-wide text-neutral-500">
@@ -17,7 +19,7 @@
                         <td class="px-4 py-3"><x-status :status="$d->status" :label="t('profit.status.'.$d->status)" /></td>
                         <td class="px-4 py-3 text-right">@can('profit.manage')@if (! in_array($d->status, ['approved','distributed']))<x-row-actions :delete="route('admin.profit.destroy', $d)" />@endif @endcan</td>
                     </tr>
-                @empty<tr><td colspan="6"><x-empty :title="t('profit.emptyTitle')" :hint="t('profit.emptyHint')" icon="arrow-trending-up" /></td></tr>@endforelse
+                @empty<tr><td colspan="6"><x-empty :title="t('profit.emptyTitle')" :hint="t('profit.emptyHintAction')" icon="arrow-trending-up" /></td></tr>@endforelse
             </tbody>
         </table>
     </x-card>

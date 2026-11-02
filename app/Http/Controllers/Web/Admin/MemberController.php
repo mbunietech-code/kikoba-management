@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Web\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SaveMemberRequest;
 use App\Models\Member;
+use App\Models\SavingsAccount;
 use App\Support\Audit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -71,6 +72,7 @@ class MemberController extends Controller
         $data['avatar_color'] = '#'.substr(md5($data['full_name']), 0, 6);
 
         $member = $this->persist($request, new Member, $data, 'CREATE_MEMBER');
+        SavingsAccount::openFor($member);
 
         return redirect()->route('admin.members.show', $member)->with('toast', t('members.addMember').' ✓');
     }

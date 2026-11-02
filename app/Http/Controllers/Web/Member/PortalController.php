@@ -47,7 +47,7 @@ class PortalController extends Controller
             'projectInvestment' => (int) $inv->sum('amount'),
             // Real money only: project profit shares plus approved / paid dividend allocations.
             'profit' => (int) $inv->sum('profit_share') + (int) ProfitAllocation::where('member_id', $m->id)
-                ->whereHas('distribution', fn ($q) => $q->whereIn('status', ['approved', 'distributed']))->sum('amount'),
+                ->where('status', 'paid')->sum('amount'),
             'insurance' => $m->insuranceAccount,
         ];
     }

@@ -139,7 +139,11 @@ Route::middleware(['auth', EnsureStaff::class])->prefix('admin')->name('admin.')
 
     Route::controller(Admin\ProfitController::class)->prefix('profit')->name('profit.')->group(function () {
         Route::get('/', 'index')->name('index')->can('profit.view');
+        Route::get('/new', 'create')->name('create')->can('profit.manage');
+        Route::post('/', 'store')->name('store')->can('profit.manage');
         Route::get('/{distribution}', 'show')->name('show')->can('profit.view');
+        Route::post('/{distribution}/approve', 'approve')->name('approve')->can('profit.manage');
+        Route::post('/{distribution}/distribute', 'distribute')->name('distribute')->can('profit.manage');
         Route::delete('/{distribution}', 'destroy')->name('destroy')->can('profit.manage');
     });
 
