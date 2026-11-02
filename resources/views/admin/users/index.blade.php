@@ -20,14 +20,14 @@
                         <td class="px-4 py-3"><x-status :status="$u->status" :label="t('users.statuses.'.$u->status)" /></td>
                         <td class="px-4 py-3 text-right">
                             @if ($editable && auth()->user()->can('users.manage'))
-                                <x-row-actions :delete="$role !== 'super_admin' ? route('admin.users.destroy', $u) : null" :confirm="t('users.deleteConfirm', ['name' => $u->name])">
-                                    <x-slot:extra>
-                                        <button type="button" class="flex w-full items-center gap-2 px-3 py-2 text-[13px] text-neutral-700 hover:bg-neutral-50"
-                                                x-on:click="menu=false; $dispatch('open-modal','user-{{ $u->id }}')">
-                                            <x-heroicon-o-pencil-square class="h-4 w-4" /> {{ t('common.edit') }}
-                                        </button>
-                                    </x-slot:extra>
-                                </x-row-actions>
+                                <div class="flex items-center justify-end gap-2">
+                                    <x-btn variant="outlined" size="sm" icon="pencil-square" x-data x-on:click="$dispatch('open-modal','user-{{ $u->id }}')">{{ t('common.edit') }}</x-btn>
+                                    @if ($role !== 'super_admin')
+                                        <form method="POST" action="{{ route('admin.users.destroy', $u) }}" onsubmit="return confirm(@js(t('users.deleteConfirm', ['name' => $u->name])))">@csrf @method('DELETE')
+                                            <x-btn type="submit" variant="outlined" size="sm" icon="trash" class="text-red-600 hover:border-red-300 hover:bg-red-50">{{ t('common.delete') }}</x-btn>
+                                        </form>
+                                    @endif
+                                </div>
                                 <x-modal name="user-{{ $u->id }}" :title="t('common.edit').' — '.$u->name">
                                     <form method="POST" action="{{ route('admin.users.update', $u) }}" class="grid gap-4 text-left">@csrf @method('PUT')
                                         <div class="grid gap-4 sm:grid-cols-2">

@@ -72,6 +72,21 @@ class AdministrationTest extends TestCase
         $this->assertTrue(Hash::check('new-pass-123', $member->fresh()->password));
     }
 
+    public function test_each_staff_row_shows_edit_and_delete_buttons_except_for_yourself(): void
+    {
+        $treasurer = User::factory()->create(['organization_id' => $this->organization->id]);
+        $treasurer->assignRole('treasurer');
+
+        $html = $this->get(route('admin.users.index'))->assertOk()->getContent();
+
+        $this->assertStringContainsString("open-modal','user-{$treasurer->id}'", $html);
+        $this->assertStringContainsString('action="'.route('admin.users.destroy', $treasurer).'"', $html);
+        $this->assertStringNotContainsString('action="'.route('admin.users.destroy', $this->admin).'"', $html);
+
+        $this->delete(route('admin.users.destroy', $treasurer))->assertSessionHasNoErrors();
+        $this->assertSoftDeleted($treasurer);
+    }
+
     public function test_users_change_their_own_password_with_the_current_one(): void
     {
         $this->admin->update(['password' => 'old-password']);
