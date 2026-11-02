@@ -340,7 +340,7 @@ return [
         'noActiveMembers' => 'No active members.',
         'noContributions' => 'No Jamii or Dharura contributions recorded yet.',
         'state' => ['paid' => 'Paid', 'partial' => 'Part paid', 'pending' => 'Not paid'],
-        'title' => 'Community',
+        'title' => 'Jamii/Dharura',
         'subtitle' => 'Members organised by solidarity group (Jamii).',
         'groups' => 'Groups',
         'ungrouped' => 'Ungrouped',
@@ -880,7 +880,7 @@ return [
         'modules' => [
             'opening_shares' => 'Opening shares', 'opening_sharesDesc' => 'Separate ledger for entrance / initial shares',
             'shares' => 'Shares', 'sharesDesc' => 'Ongoing share purchases and share capital',
-            'community' => 'Community (Jamii)', 'communityDesc' => 'Group members into solidarity groups',
+            'community' => 'Jamii/Dharura', 'communityDesc' => 'Group members into solidarity groups',
             'insurance' => 'Insurance', 'insuranceDesc' => 'Protection fund contributions and claims',
         ],
         'organizationName' => 'Organization name',

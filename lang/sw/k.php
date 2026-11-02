@@ -340,7 +340,7 @@ return [
         'noActiveMembers' => 'Hakuna wanachama hai.',
         'noContributions' => 'Bado hakuna michango ya Jamii wala Dharura.',
         'state' => ['paid' => 'Amelipa', 'partial' => 'Amelipa sehemu', 'pending' => 'Hajalipa'],
-        'title' => 'Jamii',
+        'title' => 'Jamii/Dharura',
         'subtitle' => 'Wanachama waliopangwa kwa vikundi vya dhamana.',
         'groups' => 'Vikundi',
         'ungrouped' => 'Hawajapangwa',
@@ -880,7 +880,7 @@ return [
         'modules' => [
             'opening_shares' => 'Hisa anzia', 'opening_sharesDesc' => 'Daftari tofauti la hisa za kujiunga / za awali',
             'shares' => 'Hisa', 'sharesDesc' => 'Ununuzi wa hisa unaoendelea na mtaji wa hisa',
-            'community' => 'Jamii', 'communityDesc' => 'Panga wanachama katika vikundi vya dhamana',
+            'community' => 'Jamii/Dharura', 'communityDesc' => 'Panga wanachama katika vikundi vya dhamana',
             'insurance' => 'Bima', 'insuranceDesc' => 'Michango ya mfuko wa ulinzi na madai',
         ],
         'organizationName' => 'Jina la shirika',
