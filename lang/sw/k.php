@@ -211,6 +211,9 @@ return [
         'quickActions' => 'Vitendo vya haraka',
     ],
     'members' => [
+        'countSummary' => 'Wanachama :count wamesajiliwa',
+        'removeOrDeactivate' => 'Ondoa',
+        'removeConfirm' => 'Ondoa :name? Kama ana hisa, akiba, mikopo au rekodi nyingine atawekwa kuwa hai-tumiki badala yake ili historia ibaki.',
         'personalDetails' => 'Taarifa binafsi',
         'contactDetails' => 'Mawasiliano na makazi',
         'employmentDetails' => 'Kazi na shughuli za kiuchumi',
@@ -285,6 +288,8 @@ return [
         'ungrouped' => 'Hawajapangwa',
     ],
     'shares' => [
+        'fromSettings' => 'kutoka Mipangilio',
+        'deleteConfirm' => 'Futa rekodi hii ya hisa ya :amount ya :name? Fanya hivi kurekebisha kosa tu.',
         'title' => 'Hisa',
         'subtitle' => 'Fuatilia umiliki wa hisa katika chama.',
         'recordPurchase' => 'Rekodi ununuzi',
@@ -298,6 +303,10 @@ return [
         'holders' => 'Wamiliki wa hisa',
     ],
     'savings' => [
+        'chooseMember' => 'Chagua mwanachama…',
+        'referenceHint' => 'Si lazima — namba ya risiti au M-Pesa',
+        'memberProfile' => 'Wasifu wa mwanachama',
+        'noMovements' => 'Hakuna amana wala utoaji bado.',
         'title' => 'Akiba',
         'subtitle' => 'Akaunti za akiba za wanachama na miamala.',
         'accountNumber' => 'Namba ya akaunti',
@@ -671,6 +680,15 @@ return [
         'timestamp' => 'Muda',
     ],
     'transactions' => [
+        'statuses' => ['successful' => 'Imefanikiwa', 'reversed' => 'Imerudishwa', 'pending' => 'Inasubiri', 'failed' => 'Imeshindwa'],
+        'reversal' => [
+            'explain' => 'Ingizo la kurekebisha litawekwa na la awali litawekwa alama ya kurudishwa. Hakuna kinachofutwa.',
+            'reason' => 'Sababu',
+            'already' => 'Hii imesharudishwa.',
+            'notAllowed' => 'Hapa unaweza kurudisha amana na utoaji wa akiba tu. Marekebisho ya mikopo yafanyike kwenye ukurasa wa mkopo.',
+            'wouldOverdraw' => 'Kurudisha huu muamala kutafanya salio la akiba (:balance) kuwa chini ya sifuri.',
+            'systemJournal' => 'Ingizo hili limewekwa na muamala. Rudisha muamala wenyewe ili salio libaki sahihi.',
+        ],
         'title' => 'Miamala',
         'subtitle' => 'Kila mwendo wa fedha, wenye kumbukumbu.',
         'txnRef' => 'Kumbukumbu ya muamala',

@@ -54,7 +54,7 @@ class LoanController extends Controller
     public function approve(Request $request, Loan $loan)
     {
         if (! in_array($loan->status, self::TABS['applications'], true)) {
-            return back()->with('toast', t('loans.notAwaitingDecision'));
+            return back()->with('toast', t('loans.notAwaitingDecision'))->with('toast_tone', 'error');
         }
         $loan->update(['status' => 'approved', 'approval_date' => now()->toDateString()]);
         Audit::log($request, 'APPROVE_LOAN', 'Loan', $loan->id, ['status' => $loan->getOriginal('status')], ['status' => 'approved']);
@@ -65,7 +65,7 @@ class LoanController extends Controller
     public function reject(Request $request, Loan $loan)
     {
         if (! in_array($loan->status, [...self::TABS['applications'], 'approved'], true)) {
-            return back()->with('toast', t('loans.notAwaitingDecision'));
+            return back()->with('toast', t('loans.notAwaitingDecision'))->with('toast_tone', 'error');
         }
         $loan->update(['status' => 'rejected']);
         Audit::log($request, 'REJECT_LOAN', 'Loan', $loan->id);
@@ -78,7 +78,7 @@ class LoanController extends Controller
         try {
             $this->loans->disburse($request, $loan->id);
         } catch (\Throwable $e) {
-            return back()->with('toast', $e->getMessage());
+            return back()->with('toast', $e->getMessage())->with('toast_tone', 'error');
         }
 
         return back()->with('toast', t('loans.disburse').' ✓');
@@ -87,7 +87,7 @@ class LoanController extends Controller
     public function repay(Request $request, Loan $loan)
     {
         if (! in_array($loan->status, ['active', 'disbursed', 'overdue', 'defaulted'], true)) {
-            return back()->with('toast', t('loans.notRepayable'));
+            return back()->with('toast', t('loans.notRepayable'))->with('toast_tone', 'error');
         }
         $data = $request->validate([
             'amount' => ['required', 'integer', 'min:1', 'max:'.$loan->outstanding_balance],
@@ -102,7 +102,7 @@ class LoanController extends Controller
     public function cancel(Request $request, Loan $loan)
     {
         if (in_array($loan->status, ['active', 'overdue', 'completed', 'defaulted'])) {
-            return back()->with('toast', 'Disbursed loan cannot be cancelled');
+            return back()->with('toast', 'Disbursed loan cannot be cancelled')->with('toast_tone', 'error');
         }
         $loan->update(['status' => 'cancelled']);
         Audit::log($request, 'CANCEL_LOAN', 'Loan', $loan->id);

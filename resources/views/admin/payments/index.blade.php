@@ -23,12 +23,14 @@
                             <td class="px-4 py-3 text-[13px]">{{ $p->member?->full_name ?? '—' }}</td>
                             <td class="px-4 py-3 text-[13px]">{{ $p->purpose }}</td>
                             <td class="px-4 py-3"><x-badge tone="info">{{ t('payments.methods.'.$p->payment_method) }}</x-badge></td>
-                            <td class="px-4 py-3 text-right font-medium">{{ money($p->amount) }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right font-medium tabular-nums">{{ money($p->amount) }}</td>
                             <td class="px-4 py-3"><x-status :status="$p->status" /></td>
                             <td class="px-4 py-3 text-right">
                                 <div class="flex items-center justify-end gap-1">
-                                    @if ($p->status === 'pending')<form method="POST" action="{{ route('admin.payments.verify', $p) }}">@csrf<button class="k-btn k-btn-primary k-btn-sm">{{ t('payments.verify') }}</button></form>@endif
-                                    @if (in_array($p->status, ['successful','pending']))<x-row-actions :delete="route('admin.payments.reverse', $p)" :deleteLabel="t('common.reverse')" />@endif
+                                    @can('payments.verify')
+                                        @if ($p->status === 'pending')<form method="POST" action="{{ route('admin.payments.verify', $p) }}">@csrf<button class="k-btn k-btn-primary k-btn-sm">{{ t('payments.verify') }}</button></form>@endif
+                                        @if (in_array($p->status, ['successful','pending']))<x-reverse-action :action="route('admin.payments.reverse', $p)" :summary="$p->internal_reference.' · '.money($p->amount)" />@endif
+                                    @endcan
                                 </div>
                             </td>
                         </tr>

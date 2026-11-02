@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Services\ReversalService;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class TransactionController extends Controller
 {
@@ -26,7 +27,12 @@ class TransactionController extends Controller
 
     public function reverse(Request $request, Transaction $txn)
     {
-        $this->reversals->reverseTransaction($request, $txn, $request->input('reason'));
+        $request->validate(['reason' => ['required', 'string', 'max:255']]);
+        try {
+            $this->reversals->reverseTransaction($request, $txn, $request->input('reason'));
+        } catch (ValidationException $e) {
+            return back()->with('toast', collect($e->errors())->flatten()->first())->with('toast_tone', 'error');
+        }
 
         return back()->with('toast', t('common.reverse').' ✓');
     }

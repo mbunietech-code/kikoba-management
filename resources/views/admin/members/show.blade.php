@@ -2,7 +2,10 @@
 <x-layouts.app :title="$title">
     <x-page-header :title="$member->full_name" :subtitle="$member->member_number" :back="route('admin.members.index')" :backLabel="t('members.title')">
         <x-slot:actions>
-            <x-btn variant="outlined" :href="route('admin.members.edit', $member)" icon="pencil-square">{{ t('common.edit') }}</x-btn>
+            @if ($member->savingsAccount)
+                @can('savings.view')<x-btn variant="outlined" :href="route('admin.savings.show', $member->savingsAccount)">{{ t('savings.title') }}</x-btn>@endcan
+            @endif
+            @can('members.update')<x-btn variant="outlined" :href="route('admin.members.edit', $member)" icon="pencil-square">{{ t('common.edit') }}</x-btn>@endcan
         </x-slot:actions>
     </x-page-header>
 
@@ -26,9 +29,9 @@
 
         <div class="min-w-0">
             <div class="grid gap-3 sm:grid-cols-3">
-                <x-stat :label="t('member.shareValue')" :value="money($shareValue, true)" />
-                <x-stat tone="secondary" :label="t('member.savingsBalance')" :value="money($member->savingsAccount?->balance ?? 0, true)" />
-                <x-stat tone="neutral" :label="t('member.outstanding')" :value="money($member->loans->sum('outstanding_balance'), true)" />
+                <x-stat :label="t('member.shareValue')" :value="money($shareValue)" />
+                <x-stat :label="t('member.savingsBalance')" :value="money($member->savingsAccount?->balance ?? 0)" />
+                <x-stat :label="t('member.outstanding')" :value="money($member->loans->sum('outstanding_balance'))" />
             </div>
 
             <x-card class="mt-4" flush>
@@ -60,7 +63,7 @@
                             ['label' => t('members.occupation'), 'value' => e($member->occupation ?: '—')],
                             ['label' => t('members.employer'), 'value' => e($member->employer ?: '—')],
                             ['label' => t('members.communityGroup'), 'value' => e($member->community_group ?: '—')],
-                            ['label' => t('members.nextOfKin'), 'value' => e(($member->next_of_kin ?: '—').' · '.$member->next_of_kin_phone)],
+                            ['label' => t('members.nextOfKin'), 'value' => e(collect([$member->next_of_kin, $member->next_of_kin_phone])->filter()->implode(' · ') ?: '—')],
                             ['label' => t('members.kinRelationship'), 'value' => e($member->next_of_kin_relationship ?: '—')],
                             ['label' => t('members.kinAddress'), 'value' => e($member->next_of_kin_address ?: '—')],
                             ['label' => t('savings.accountNumber'), 'value' => $member->savingsAccount?->account_number ?? '—'],
@@ -82,7 +85,8 @@
                             :rows="$member->shares->map(fn($s) => [$s->transaction_reference, num($s->quantity), money($s->price_per_share), money($s->total_value), fdate($s->purchased_at)])" />
                     @elseif ($tab === 'savings')
                         <x-mini-table :head="[t('common.date'), t('common.type'), t('common.amount'), t('savings.balanceAfter')]"
-                            :rows="$member->savingsTransactions->map(fn($s) => [fdate($s->created_at), t('savings.txnType.'.$s->type), ($s->type==='deposit'?'+':'−').money($s->amount, symbol:false), money($s->balance_after)])" />
+                            :align="['', '', 'right', 'right']"
+                            :rows="$member->savingsTransactions->map(fn($s) => [fdate($s->created_at), t('savings.txnType.'.$s->type), ($s->balance_after >= $s->balance_before ? '+' : '−').money(abs($s->balance_after - $s->balance_before), symbol:false), money($s->balance_after)])" />
                     @elseif ($tab === 'loans')
                         <table class="w-full text-sm">
                             <thead><tr class="border-b border-neutral-200 text-left text-[11px] uppercase tracking-wide text-neutral-500">
@@ -99,7 +103,7 @@
                                         <td class="px-2 py-2.5 text-[13px]">{{ $l->product?->name ?? '—' }}</td>
                                         <td class="px-2 py-2.5 text-right">{{ money($l->principal_amount) }}</td>
                                         <td class="px-2 py-2.5 text-right">{{ money($l->outstanding_balance) }}</td>
-                                        <td class="px-2 py-2.5"><x-status :status="$l->status" /></td>
+                                        <td class="px-2 py-2.5"><x-status :status="$l->status" :label="t('loans.status.'.$l->status)" /></td>
                                     </tr>
                                 @empty
                                     <tr><td colspan="5"><x-empty :title="t('common.noData')" /></td></tr>
@@ -120,7 +124,8 @@
                         @endif
                     @elseif ($tab === 'transactions')
                         <x-mini-table :head="[t('transactions.txnRef'), t('common.type'), t('common.amount'), t('common.date'), t('common.status')]"
-                            :rows="$member->transactions->map(fn($r) => [$r->transaction_reference, t('transactions.types.'.strtolower($r->type)), money($r->amount), fdate($r->created_at), ucfirst($r->status)])" />
+                            :align="['', '', 'right', '', '']"
+                            :rows="$member->transactions->map(fn($r) => [$r->transaction_reference, t('transactions.types.'.strtolower($r->type)), money($r->amount), fdate($r->created_at), t('transactions.statuses.'.$r->status)])" />
                     @endif
                 </div>
             </x-card>

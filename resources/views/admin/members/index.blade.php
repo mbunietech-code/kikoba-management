@@ -1,9 +1,9 @@
 @php $title = t('members.title'); @endphp
 <x-layouts.app :title="$title">
-    <x-page-header :title="t('members.title')" :subtitle="t('members.subtitle')">
+    <x-page-header :title="t('members.title')" :subtitle="t('members.countSummary', ['count' => $members->total()])">
         <x-slot:actions>
-            <x-btn variant="outlined" icon="arrow-down-tray">{{ t('common.export') }}</x-btn>
-            <x-btn :href="route('admin.members.create')" icon="user-plus">{{ t('members.addMember') }}</x-btn>
+            @can('reports.view')<x-btn variant="outlined" icon="arrow-down-tray" :href="route('admin.reports.download', 'membership')">{{ t('common.export') }} (CSV)</x-btn>@endcan
+            @can('members.create')<x-btn :href="route('admin.members.create')" icon="user-plus">{{ t('members.addMember') }}</x-btn>@endcan
         </x-slot:actions>
     </x-page-header>
 
@@ -28,23 +28,25 @@
                 </thead>
                 <tbody class="divide-y divide-neutral-100">
                     @forelse ($members as $m)
-                        <tr class="hover:bg-neutral-50" onclick="window.location='{{ route('admin.members.show', $m) }}'" style="cursor:pointer">
+                        <tr class="hover:bg-neutral-50">
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2.5">
                                     <x-avatar :name="$m->full_name" :color="$m->avatar_color" size="sm" />
                                     <div>
-                                        <div class="text-[13.5px] font-medium text-neutral-800">{{ $m->full_name }}</div>
+                                        <a href="{{ route('admin.members.show', $m) }}" class="text-[13.5px] font-medium text-neutral-800 hover:text-primary-700 hover:underline">{{ $m->full_name }}</a>
                                         <div class="text-[11px] text-neutral-400">{{ $m->member_number }}@if ($m->community_group) · {{ $m->community_group }}@endif</div>
                                     </div>
                                 </div>
                             </td>
                             <td class="px-4 py-3 text-[13px] text-neutral-500">{{ $m->phone }}</td>
-                            <td class="px-4 py-3 text-right">{{ money($m->shares_value ?? 0, true) }}</td>
-                            <td class="px-4 py-3 text-right">{{ money($m->savingsAccount?->balance ?? 0, true) }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right tabular-nums">{{ money($m->shares_value ?? 0) }}</td>
+                            <td class="whitespace-nowrap px-4 py-3 text-right tabular-nums">{{ money($m->savingsAccount?->balance ?? 0) }}</td>
                             <td class="px-4 py-3 text-[13px] text-neutral-500">{{ fdate($m->registration_date) }}</td>
                             <td class="px-4 py-3"><x-status :status="$m->status" :label="t('members.status.'.$m->status)" /></td>
                             <td class="px-4 py-3 text-right">
-                                <x-row-actions :edit="route('admin.members.edit', $m)" :delete="route('admin.members.destroy', $m)" />
+                                <x-row-actions :edit="auth()->user()->can('members.update') ? route('admin.members.edit', $m) : null"
+                                               :delete="auth()->user()->can('members.delete') ? route('admin.members.destroy', $m) : null"
+                                               :deleteLabel="t('members.removeOrDeactivate')" :confirm="t('members.removeConfirm', ['name' => $m->full_name])" />
                             </td>
                         </tr>
                     @empty

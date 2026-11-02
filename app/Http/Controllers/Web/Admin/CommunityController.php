@@ -28,12 +28,14 @@ class CommunityController extends Controller
         $shareByGroup = DB::table('shares')
             ->join('members', 'members.id', '=', 'shares.member_id')
             ->where('shares.organization_id', $orgId)
+            ->whereNull('members.deleted_at')
             ->selectRaw("COALESCE(NULLIF(members.community_group, ''), '__none__') as grp, sum(shares.total_value) as v")
             ->groupBy('grp')->pluck('v', 'grp');
 
         $savingsByGroup = DB::table('savings_accounts')
             ->join('members', 'members.id', '=', 'savings_accounts.member_id')
             ->where('savings_accounts.organization_id', $orgId)
+            ->whereNull('members.deleted_at')
             ->selectRaw("COALESCE(NULLIF(members.community_group, ''), '__none__') as grp, sum(savings_accounts.balance) as v")
             ->groupBy('grp')->pluck('v', 'grp');
 

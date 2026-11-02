@@ -18,8 +18,18 @@ class SavingsTransaction extends BaseModel
         return ['amount' => 'int', 'balance_before' => 'int', 'balance_after' => 'int'];
     }
 
+    public function account()
+    {
+        return $this->belongsTo(SavingsAccount::class, 'savings_account_id');
+    }
 
-    public function account() { return $this->belongsTo(SavingsAccount::class, 'savings_account_id'); }
+    public function member()
+    {
+        return $this->belongsTo(Member::class)->withTrashed();
+    }
 
-    public function member() { return $this->belongsTo(Member::class)->withTrashed(); }
+    public function transaction()
+    {
+        return $this->belongsTo(Transaction::class);
+    }
 }

@@ -6,7 +6,9 @@
 <x-layouts.app :title="$title">
     <x-page-header :title="$entry->reference" :subtitle="$entry->description" :back="route('admin.accounting.index', ['tab' => 'journal'])" :backLabel="t('accounting.title')">
         <x-slot:actions>
-            <form method="POST" action="{{ route('admin.accounting.journal.reverse', $entry) }}">@csrf<button class="k-btn k-btn-outlined">{{ t('common.reverse') }}</button></form>
+            @if (! $entry->transaction_id)
+                @can('accounting.post')<x-reverse-action size="md" :action="route('admin.accounting.journal.reverse', $entry)" :summary="$entry->reference.' · '.$entry->description" />@endcan
+            @endif
         </x-slot:actions>
     </x-page-header>
     <div class="grid gap-4 lg:grid-cols-[1fr_320px]">

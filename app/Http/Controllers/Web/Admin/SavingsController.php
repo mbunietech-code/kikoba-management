@@ -9,6 +9,8 @@ use App\Models\Transaction;
 use App\Services\ReversalService;
 use App\Services\SavingsService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Validation\ValidationException;
 
 class SavingsController extends Controller
 {
@@ -21,23 +23,57 @@ class SavingsController extends Controller
     {
         $orgId = app('kikoba.org')->id;
         $accounts = SavingsAccount::where('organization_id', $orgId)->with('member')
-            ->when($request->q, fn ($q, $s) => $q->where('account_number', 'like', "%$s%")
-                ->orWhereHas('member', fn ($w) => $w->where('full_name', 'like', "%$s%")))
+            ->when($request->q, fn ($q, $s) => $q->where(fn ($w) => $w->where('account_number', 'like', "%$s%")
+                ->orWhereHas('member', fn ($m) => $m->where('full_name', 'like', "%$s%")->orWhere('member_number', 'like', "%$s%"))))
             ->orderByDesc('balance')->paginate(15)->withQueryString();
 
-        $dep = (int) SavingsTransaction::where('organization_id', $orgId)->where('type', 'deposit')->sum('amount');
-        $wd = (int) SavingsTransaction::where('organization_id', $orgId)->where('type', 'withdrawal')->sum('amount');
-        $summary = ['deposits' => $dep, 'withdrawals' => $wd, 'net' => $dep - $wd];
+        $summary = [
+            'deposits' => $this->effectiveTotal($orgId, 'deposit'),
+            'withdrawals' => $this->effectiveTotal($orgId, 'withdrawal'),
+            'net' => (int) SavingsAccount::where('organization_id', $orgId)->sum('balance'),
+        ];
 
-        return view('admin.savings.index', compact('accounts', 'summary'));
+        return view('admin.savings.index', [
+            'accounts' => $accounts,
+            'summary' => $summary,
+            'accountOptions' => $this->accountOptions($orgId),
+        ]);
     }
 
     public function show(SavingsAccount $account)
     {
         $account->load('member');
-        $txns = $account->transactions()->orderBy('created_at')->get();
+        $txns = $account->transactions()->with('transaction:id,status,type,transaction_reference')->latest('created_at')->get();
+        $reversedIds = $txns->pluck('reversal_of')->filter()->all();
 
-        return view('admin.savings.show', compact('account', 'txns'));
+        return view('admin.savings.show', [
+            'account' => $account,
+            'txns' => $txns,
+            'reversedIds' => $reversedIds,
+            'deposits' => $txns->where('type', 'deposit')->whereNotIn('id', $reversedIds)->sum('amount'),
+            'withdrawals' => $txns->where('type', 'withdrawal')->whereNotIn('id', $reversedIds)->sum('amount'),
+        ]);
+    }
+
+    /** Deposits or withdrawals that have not been reversed. */
+    private function effectiveTotal(string $orgId, string $type): int
+    {
+        return (int) SavingsTransaction::where('organization_id', $orgId)->where('type', $type)
+            ->whereNotIn('id', SavingsTransaction::where('organization_id', $orgId)->whereNotNull('reversal_of')->select('reversal_of'))
+            ->sum('amount');
+    }
+
+    /**
+     * Every account in the group for the deposit / withdrawal pickers (not just the visible page).
+     *
+     * @return Collection<int, SavingsAccount>
+     */
+    private function accountOptions(string $orgId)
+    {
+        return SavingsAccount::where('organization_id', $orgId)->where('status', '!=', 'closed')
+            ->with('member:id,full_name,member_number')
+            ->get(['id', 'member_id', 'account_number', 'balance'])
+            ->sortBy(fn ($a) => $a->member?->full_name)->values();
     }
 
     public function deposit(Request $request)
@@ -45,7 +81,7 @@ class SavingsController extends Controller
         $data = $request->validate([
             'account_id' => ['required', 'exists:savings_accounts,id'],
             'amount' => ['required', 'integer', 'min:1'],
-            'reference' => ['nullable', 'string'],
+            'reference' => ['nullable', 'string', 'max:100'],
         ]);
         $this->savings->deposit($request, $data);
 
@@ -57,11 +93,11 @@ class SavingsController extends Controller
         $data = $request->validate([
             'account_id' => ['required', 'exists:savings_accounts,id'],
             'amount' => ['required', 'integer', 'min:1'],
-            'reference' => ['nullable', 'string'],
+            'reference' => ['nullable', 'string', 'max:100'],
         ]);
         try {
             $this->savings->withdraw($request, $data);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             return back()->withErrors($e->errors());
         }
 
@@ -70,7 +106,12 @@ class SavingsController extends Controller
 
     public function reverse(Request $request, Transaction $txn)
     {
-        $this->reversals->reverseTransaction($request, $txn, $request->input('reason'));
+        $request->validate(['reason' => ['required', 'string', 'max:255']]);
+        try {
+            $this->reversals->reverseTransaction($request, $txn, $request->input('reason'));
+        } catch (ValidationException $e) {
+            return back()->with('toast', collect($e->errors())->flatten()->first())->with('toast_tone', 'error');
+        }
 
         return back()->with('toast', t('common.reverse').' ✓');
     }

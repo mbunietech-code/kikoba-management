@@ -7,12 +7,12 @@
         }
      }"
      x-on:k-toast.window="add($event.detail.message, $event.detail.tone)"
-     x-init="@if (session('toast')) add(@js(session('toast')), @js(session('toast_tone', 'success'))) @endif"
+     x-init="@if (session('toast')) add(@js(session('toast')), @js(session('toast_tone', 'success'))) @elseif ($errors->any()) add(@js($errors->first()), 'error') @endif"
      class="fixed bottom-4 left-1/2 z-[60] flex -translate-x-1/2 flex-col items-center gap-2"
      x-cloak>
     <template x-for="item in items" :key="item.id">
         <div x-transition
-             class="rounded-xl px-4 py-2.5 text-[13px] font-medium text-white shadow-lg"
+             class="max-w-[90vw] rounded-md px-4 py-2.5 text-[13px] font-medium text-white shadow-lg"
              :class="item.tone === 'error' ? 'bg-red-600' : 'bg-neutral-900'"
              x-text="item.message"></div>
     </template>

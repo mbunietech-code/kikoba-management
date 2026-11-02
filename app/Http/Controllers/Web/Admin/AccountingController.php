@@ -72,6 +72,12 @@ class AccountingController extends Controller
 
     public function reverseJournal(Request $request, JournalEntry $entry)
     {
+        if ($entry->transaction_id) {
+            return back()->with('toast', t('transactions.reversal.systemJournal'))->with('toast_tone', 'error');
+        }
+        if (JournalEntry::where('organization_id', $entry->organization_id)->where('description', 'Reversal of '.$entry->reference)->exists()) {
+            return back()->with('toast', t('transactions.reversal.already'))->with('toast_tone', 'error');
+        }
         $entry->load('lines.account');
         $lines = $entry->lines->map(fn ($l) => [$l->account->account_code, $l->credit, $l->debit])->all();
         app(AccountingService::class)->post($entry->organization_id, $entry->reference.'-REV', 'Reversal of '.$entry->reference, $lines, $entry->transaction_id);

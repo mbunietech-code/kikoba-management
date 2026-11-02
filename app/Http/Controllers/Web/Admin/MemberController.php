@@ -86,6 +86,8 @@ class MemberController extends Controller
 
     public function destroy(Request $request, Member $member)
     {
+        $this->ensureOrganization($request, $member);
+
         // SDD §39 — members tied to financial records are never removed; they
         // are deactivated instead so loans / savings / transactions stay intact.
         $hasRecords = $member->loans()->exists()

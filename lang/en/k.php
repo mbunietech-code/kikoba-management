@@ -211,6 +211,9 @@ return [
         'quickActions' => 'Quick actions',
     ],
     'members' => [
+        'countSummary' => ':count members registered',
+        'removeOrDeactivate' => 'Remove',
+        'removeConfirm' => 'Remove :name? If they have shares, savings, loans or other records they are marked inactive instead, so their history is kept.',
         'personalDetails' => 'Personal details',
         'contactDetails' => 'Contact & residence',
         'employmentDetails' => 'Occupation & employment',
@@ -285,6 +288,8 @@ return [
         'ungrouped' => 'Ungrouped',
     ],
     'shares' => [
+        'fromSettings' => 'from Settings',
+        'deleteConfirm' => 'Delete this :amount share record for :name? Only do this to correct a mistake.',
         'title' => 'Shares',
         'subtitle' => 'Track share ownership across the group.',
         'recordPurchase' => 'Record purchase',
@@ -298,6 +303,10 @@ return [
         'holders' => 'Share holders',
     ],
     'savings' => [
+        'chooseMember' => 'Choose a member…',
+        'referenceHint' => 'Optional — receipt or M-Pesa code',
+        'memberProfile' => 'Member profile',
+        'noMovements' => 'No deposits or withdrawals yet.',
         'title' => 'Savings',
         'subtitle' => 'Member savings accounts and transactions.',
         'accountNumber' => 'Account no.',
@@ -671,6 +680,15 @@ return [
         'timestamp' => 'Timestamp',
     ],
     'transactions' => [
+        'statuses' => ['successful' => 'Successful', 'reversed' => 'Reversed', 'pending' => 'Pending', 'failed' => 'Failed'],
+        'reversal' => [
+            'explain' => 'A correcting entry is posted and the original is marked reversed. Nothing is deleted.',
+            'reason' => 'Reason',
+            'already' => 'This has already been reversed.',
+            'notAllowed' => 'Only savings deposits and withdrawals can be reversed here. Correct loan payments from the loan page.',
+            'wouldOverdraw' => 'Reversing this would take the savings balance (:balance) below zero.',
+            'systemJournal' => 'This entry was posted by a transaction. Reverse the transaction instead so balances stay in step.',
+        ],
         'title' => 'Transactions',
         'subtitle' => 'Every movement of money, with a reference.',
         'txnRef' => 'Transaction ref.',

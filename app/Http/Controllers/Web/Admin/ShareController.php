@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Member;
+use App\Models\Setting;
 use App\Models\Share;
 use App\Support\Audit;
 use Illuminate\Http\Request;
@@ -15,6 +16,7 @@ class ShareController extends Controller
 
     /** Route-name prefix + i18n prefix for this ledger. */
     protected string $rp = 'admin.shares';
+
     protected string $i18n = 'shares';
 
     public function index(Request $request)
@@ -23,7 +25,8 @@ class ShareController extends Controller
         $base = fn () => Share::where('organization_id', $orgId)->kind($this->kind);
 
         $shares = $base()->with('member')
-            ->when($request->q, fn ($q, $s) => $q->whereHas('member', fn ($w) => $w->where('full_name', 'like', "%$s%")))
+            ->when($request->q, fn ($q, $s) => $q->where(fn ($w) => $w->where('transaction_reference', 'like', "%$s%")
+                ->orWhereHas('member', fn ($m) => $m->where('full_name', 'like', "%$s%")->orWhere('member_number', 'like', "%$s%"))))
             ->latest('purchased_at')->paginate(15)->withQueryString();
 
         $summary = [
@@ -38,6 +41,7 @@ class ShareController extends Controller
             'shares' => $shares,
             'summary' => $summary,
             'members' => $members,
+            'sharePrice' => (int) Setting::where('organization_id', $orgId)->where('key', 'share_price')->value('value') ?: null,
             'rp' => $this->rp,
             'i18n' => $this->i18n,
         ]);
@@ -49,9 +53,9 @@ class ShareController extends Controller
             'member_id' => ['required', 'exists:members,id'],
             'quantity' => ['required', 'integer', 'min:1'],
             'price_per_share' => ['required', 'integer', 'min:1'],
-            'purchased_at' => ['nullable', 'date'],
+            'purchased_at' => ['nullable', 'date', 'before_or_equal:today'],
         ]);
-        $member = Member::findOrFail($data['member_id']);
+        $member = Member::where('organization_id', app('kikoba.org')->id)->findOrFail($data['member_id']);
         $share = Share::create([
             'organization_id' => $member->organization_id,
             'member_id' => $member->id,
@@ -60,7 +64,7 @@ class ShareController extends Controller
             'price_per_share' => $data['price_per_share'],
             'total_value' => $data['quantity'] * $data['price_per_share'],
             'purchased_at' => $data['purchased_at'] ?? now()->toDateString(),
-            'transaction_reference' => 'TXN-2026-'.str_pad((string) (Share::count() + 1), 6, '0', STR_PAD_LEFT),
+            'transaction_reference' => next_reference('SHR', Share::class, 'transaction_reference'),
             'status' => 'confirmed',
         ]);
         Audit::log($request, 'SHARE_PURCHASE', 'Share', $share->id);
@@ -74,7 +78,7 @@ class ShareController extends Controller
         $data = $request->validate([
             'quantity' => ['required', 'integer', 'min:1'],
             'price_per_share' => ['required', 'integer', 'min:1'],
-            'purchased_at' => ['nullable', 'date'],
+            'purchased_at' => ['nullable', 'date', 'before_or_equal:today'],
         ]);
         $share->update([...$data, 'total_value' => $data['quantity'] * $data['price_per_share']]);
         Audit::log($request, 'UPDATE_SHARE', 'Share', $share->id);
