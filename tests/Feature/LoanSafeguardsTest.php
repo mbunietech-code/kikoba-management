@@ -97,6 +97,27 @@ class LoanSafeguardsTest extends TestCase
         $this->assertSame(30_000, $loan->fresh()->outstanding_balance);
     }
 
+    public function test_loan_page_shows_the_overdue_warning_and_next_payment(): void
+    {
+        $loan = $this->loan(['status' => 'active', 'total_amount' => 60_000, 'outstanding_balance' => 60_000]);
+        $this->instalment($loan, 1, now()->subDays(3)->toDateString());
+
+        $this->get(route('admin.loans.show', ['loan' => $loan, 'tab' => 'schedule']))
+            ->assertOk()
+            ->assertSee(t('loans.nextPayment'))
+            ->assertSee(t('loans.scheduleStatus.overdue'))
+            ->assertSee(t('loans.recordRepayment'));
+        $this->get(route('admin.loans.index'))->assertOk()->assertSee($loan->loan_number);
+    }
+
+    public function test_repayment_date_cannot_be_in_the_future(): void
+    {
+        $loan = $this->loan(['status' => 'active', 'total_amount' => 60_000, 'outstanding_balance' => 60_000]);
+
+        $this->post(route('admin.loans.repay', $loan), ['amount' => 1_000, 'date' => now()->addDay()->toDateString()])
+            ->assertSessionHasErrors('date');
+    }
+
     /**
      * @param  array<string, mixed>  $attributes
      */

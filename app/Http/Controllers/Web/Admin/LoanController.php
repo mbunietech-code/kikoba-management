@@ -25,6 +25,7 @@ class LoanController extends Controller
         $this->loans->markOverdue($orgId);
         $tab = $request->get('tab', 'all');
         $loans = Loan::where('organization_id', $orgId)->with('member', 'product')
+            ->withMin(['schedule as next_due_date' => fn ($q) => $q->where('status', '!=', 'paid')], 'due_date')
             ->when(isset(self::TABS[$tab]), fn ($q) => $q->whereIn('status', self::TABS[$tab]))
             ->when($request->q, fn ($q, $s) => $q->where(fn ($w) => $w->where('loan_number', 'like', "%$s%")
                 ->orWhere('purpose', 'like', "%$s%")
@@ -91,6 +92,7 @@ class LoanController extends Controller
         $data = $request->validate([
             'amount' => ['required', 'integer', 'min:1', 'max:'.$loan->outstanding_balance],
             'method' => ['nullable', 'in:mobile_money,bank,card,cash,manual'],
+            'date' => ['nullable', 'date', 'before_or_equal:today'],
         ]);
         $this->loans->repay($request, $loan->id, $data);
 

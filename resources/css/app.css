@@ -102,6 +102,10 @@
   .k-btn:focus-visible, .k-input:focus-visible { outline: 2px solid var(--color-primary-600); outline-offset: 2px; }
   .k-btn-ghost { color: var(--color-primary-700); }
   .k-btn-ghost:hover { background: var(--color-primary-50); }
+  /* Wide tables scroll sideways inside their card on phones instead of pushing the page. */
+  @media (max-width: 767px) {
+    .k-card table { display: block; overflow-x: auto; white-space: nowrap; }
+  }
   .k-btn-sm { height: 2rem; padding: 0 0.7rem; font-size: 0.8rem; border-radius: 0.45rem; }
 
 }

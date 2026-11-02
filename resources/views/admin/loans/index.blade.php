@@ -24,19 +24,21 @@
                 <th class="px-4 py-3">{{ t('loans.loanNumber') }}</th><th class="px-4 py-3">{{ t('common.member') }}</th>
                 <th class="px-4 py-3">{{ t('loans.product') }}</th><th class="px-4 py-3 text-right">{{ t('loans.principal') }}</th>
                 <th class="px-4 py-3">{{ t('loans.amountPaid') }}</th><th class="px-4 py-3 text-right">{{ t('loans.outstanding') }}</th>
+                <th class="px-4 py-3">{{ t('loans.nextPayment') }}</th>
                 <th class="px-4 py-3">{{ t('common.status') }}</th></tr></thead>
             <tbody class="divide-y divide-neutral-100">
                 @forelse ($loans as $l)
                     <tr class="cursor-pointer hover:bg-neutral-50" onclick="window.location='{{ route('admin.loans.show', $l) }}'">
-                        <td class="px-4 py-3 font-medium text-primary-700">{{ $l->loan_number }}</td>
+                        <td class="whitespace-nowrap px-4 py-3 font-medium"><a href="{{ route('admin.loans.show', $l) }}" class="text-primary-700 hover:underline">{{ $l->loan_number }}</a></td>
                         <td class="px-4 py-3"><div class="flex items-center gap-2"><x-avatar :name="$l->member->full_name" :color="$l->member->avatar_color" size="xs" /><span class="text-[13px]">{{ $l->member->full_name }}</span></div></td>
                         <td class="px-4 py-3 text-[13px]">{{ $l->product->name }}</td>
-                        <td class="px-4 py-3 text-right">{{ money($l->principal_amount) }}</td>
+                        <td class="whitespace-nowrap px-4 py-3 text-right tabular-nums">{{ money($l->principal_amount) }}</td>
                         <td class="px-4 py-3"><div class="w-28"><x-progress :value="$l->total_amount ? $l->amount_paid / $l->total_amount * 100 : 0" :tone="$l->status==='overdue'?'danger':'primary'" showLabel /></div></td>
-                        <td class="px-4 py-3 text-right font-medium">{{ money($l->outstanding_balance) }}</td>
+                        <td class="whitespace-nowrap px-4 py-3 text-right font-medium tabular-nums">{{ money($l->outstanding_balance) }}</td>
+                        <td class="whitespace-nowrap px-4 py-3 text-[13px] {{ $l->status === 'overdue' ? 'font-medium text-red-700' : 'text-neutral-600' }}">{{ $l->next_due_date ? fdate($l->next_due_date) : '—' }}</td>
                         <td class="px-4 py-3"><x-status :status="$l->status" :label="t('loans.status.'.$l->status)" /></td>
                     </tr>
-                @empty<tr><td colspan="7"><x-empty :title="t('common.noData')" /></td></tr>@endforelse
+                @empty<tr><td colspan="8"><x-empty :title="t('common.noData')" /></td></tr>@endforelse
             </tbody>
         </table>
         @if ($loans->hasPages())<div class="border-t border-neutral-100 px-4 py-3">{{ $loans->links() }}</div>@endif
