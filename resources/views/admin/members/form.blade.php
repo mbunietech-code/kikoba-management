@@ -49,7 +49,7 @@
                 <x-field :label="t('members.alternativePhone')" name="alternative_phone"><x-input type="tel" name="alternative_phone" :value="old('alternative_phone', $member->alternative_phone)" maxlength="20" /></x-field>
                 <x-field :label="t('common.email')" name="email"><x-input type="email" name="email" :value="old('email', $member->email)" maxlength="191" autocomplete="email" /></x-field>
                 <x-field :label="t('members.address')" name="address"><x-input name="address" :value="old('address', $member->address)" maxlength="191" /></x-field>
-                @foreach (['region' => 100, 'district' => 100, 'ward' => 100, 'street' => 150] as $field => $limit)
+                @foreach (['region' => 100, 'district' => 100, 'ward' => 100, 'street' => 150, 'house_number' => 50] as $field => $limit)
                     <x-field :label="t('members.'.$field)" :name="$field"><x-input :name="$field" :value="old($field, $member->$field)" :maxlength="$limit" /></x-field>
                 @endforeach
                 <x-field :label="t('members.communityGroup')" name="community_group">

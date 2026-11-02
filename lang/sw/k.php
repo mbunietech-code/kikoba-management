@@ -260,6 +260,8 @@ return [
         'district' => 'Wilaya',
         'ward' => 'Kata',
         'street' => 'Mtaa / kijiji',
+        'house_number' => 'Namba ya nyumba',
+        'savingsAccountNumber' => 'Namba ya akaunti ya akiba',
         'occupation' => 'Kazi / shughuli',
         'employer' => 'Mwajiri / jina la biashara',
         'kinRelationship' => 'Uhusiano na mwanachama',

@@ -79,13 +79,14 @@
                             ['label' => t('members.district'), 'value' => e($member->district ?: '—')],
                             ['label' => t('members.ward'), 'value' => e($member->ward ?: '—')],
                             ['label' => t('members.street'), 'value' => e($member->street ?: '—')],
+                            ['label' => t('members.house_number'), 'value' => e($member->house_number ?: '—')],
                             ['label' => t('members.occupation'), 'value' => e($member->occupation ?: '—')],
                             ['label' => t('members.employer'), 'value' => e($member->employer ?: '—')],
                             ['label' => t('members.communityGroup'), 'value' => e($member->community_group ?: '—')],
                             ['label' => t('members.nextOfKin'), 'value' => e(collect([$member->next_of_kin, $member->next_of_kin_phone])->filter()->implode(' · ') ?: '—')],
                             ['label' => t('members.kinRelationship'), 'value' => e($member->next_of_kin_relationship ?: '—')],
                             ['label' => t('members.kinAddress'), 'value' => e($member->next_of_kin_address ?: '—')],
-                            ['label' => t('savings.accountNumber'), 'value' => $member->savingsAccount?->account_number ?? '—'],
+                            ['label' => t('members.savingsAccountNumber'), 'value' => $member->savingsAccount?->account_number ?? '—'],
                             ['label' => t('common.email'), 'value' => e($member->email ?: '—')],
                         ]" />
                         @foreach ($member->additional_next_of_kin ?? [] as $index => $kin)

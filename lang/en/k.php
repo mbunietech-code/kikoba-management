@@ -260,6 +260,8 @@ return [
         'district' => 'District',
         'ward' => 'Ward',
         'street' => 'Street / village',
+        'house_number' => 'House number',
+        'savingsAccountNumber' => 'Savings account no.',
         'occupation' => 'Occupation',
         'employer' => 'Employer / business name',
         'kinRelationship' => 'Relationship to member',

@@ -68,6 +68,18 @@ class MemberRegistrationTest extends TestCase
         $this->assertSame(now()->toDateString(), $member->registration_date->toDateString());
     }
 
+    public function test_house_number_is_saved_shown_and_editable(): void
+    {
+        $this->get(route('admin.members.create'))->assertSee('name="house_number"', false);
+        $this->post(route('admin.members.store'), [...$this->details(), 'house_number' => 'Plot 14, Nyumba 7'])->assertSessionHasNoErrors();
+        $member = Member::firstOrFail();
+
+        $this->assertSame('Plot 14, Nyumba 7', $member->house_number);
+        $this->get(route('admin.members.show', $member))->assertSee('Plot 14, Nyumba 7');
+        $this->put(route('admin.members.update', $member), [...$this->details(), 'house_number' => 'Nyumba 9'])->assertSessionHasNoErrors();
+        $this->assertSame('Nyumba 9', $member->fresh()->house_number);
+    }
+
     public function test_new_members_are_numbered_ug_001_upwards(): void
     {
         Member::factory()->create(['organization_id' => $this->organization->id, 'member_number' => 'MBR-000009']);

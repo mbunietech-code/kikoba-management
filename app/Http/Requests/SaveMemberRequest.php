@@ -44,6 +44,7 @@ class SaveMemberRequest extends FormRequest
             'district' => ['nullable', 'string', 'max:100'],
             'ward' => ['nullable', 'string', 'max:100'],
             'street' => ['nullable', 'string', 'max:150'],
+            'house_number' => ['nullable', 'string', 'max:50'],
             'occupation' => ['nullable', 'string', 'max:150'],
             'employer' => ['nullable', 'string', 'max:150'],
             'community_group' => ['nullable', 'string', 'max:120'],
